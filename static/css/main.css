@@ -1,54 +1,24 @@
-body {
+.contents-wrapper {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    margin: 0;
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center children horizontally */
+    text-align: center; /* Center text for all children */
+}
+
+
+/* styles for the minesweeper game board */
+.game-board-container {
+    margin: 30px auto; /* Center the table */
     font-family: 'Courier New', monospace; /* Minesweeper-like font */
 }
 
-.game-wrapper {
-    text-align: center; /* Center aligns child content */
-}
-
-.game-container {
-    margin: 40px;
-    display: block; /* Ensures block-level display */
-    clear: both;   /* Clears any floats */
-}
-
-.game-controls {
-    display: block; /* Ensures block-level display */
-    text-align: center;
-    float: none;
-    clear: both;   /* Clears any floats */
-}
-
-.game-controls form {
-    margin: 15px 0;
-}
-
-.game-controls table {
-    margin: 0 auto;
-}
-
-.game-controls input[type="number"] {
-    width: 50px; /* Adjust the width as needed */
-}
-
-.game-controls button {
-    display: block;
-    margin-top: 10px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-table {
+.game-board-container table {
     border-collapse: separate;
     border-spacing: 0;
+    border: 2px solid rgb(102, 102, 102);
 }
 
-td {
+.game-board-container td {
     width: 25px;  /* Adjust the width as needed */
     height: 25px; /* Adjust the height as needed */
     border: 3px solid darkgrey;
@@ -57,31 +27,120 @@ td {
     background-color: rgb(189, 189, 189);
     font-weight: bold;
     font-size: 22px;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
-/* Styles for unrevealed cells */
-td.unrevealed {
+.game-board-container td.unrevealed {
     border-top: 3px solid rgb(255, 255, 255);
     border-left: 3px solid rgb(255, 255, 255);
     border-bottom: 3px solid rgb(123, 123, 123);
     border-right: 3px solid rgb(123, 123, 123);
-    /* background-color: white; */
 }
 
-/* Styles for revealed cells */
-td.revealed {
+.game-board-container td.revealed {
     border: 1px solid rgb(123, 123, 123);
     padding: 3px;
 }
 
-td.bomb { background-color: red; }
-td.flag { background-color: yellow; }
-td.number-0 { color: rgb(189, 189, 189); }
-td.number-1 { color: blue; }
-td.number-2 { color: green; }
-td.number-3 { color: red; }
-td.number-4 { color: navy; }
-td.number-5 { color: maroon; }
-td.number-6 { color: teal; }
-td.number-7 { color: black; }
-td.number-8 { color: gray; }
+.game-board-container td.probe { 
+    color: white !important; 
+    background-color: rgb(0, 0, 0) !important; 
+}
+
+.game-board-container td.mine { 
+    background-image: url('/static/img/mine.png');
+}
+
+.game-board-container td.flag { 
+    background-image: url('/static/img/flag.png');
+}
+
+.game-board-container td.red-background { 
+    background-color: red !important; 
+}
+
+.game-board-container td.green-background { 
+    background-color: green !important; 
+}
+
+.game-board-container td.number-0 { color: rgb(189, 189, 189); }
+.game-board-container td.number-1 { color: blue; }
+.game-board-container td.number-2 { color: green; }
+.game-board-container td.number-3 { color: red; }
+.game-board-container td.number-4 { color: navy; }
+.game-board-container td.number-5 { color: maroon; }
+.game-board-container td.number-6 { color: teal; }
+.game-board-container td.number-7 { color: black; }
+.game-board-container td.number-8 { color: gray; }
+
+
+/* styles for the game setup form field */
+.game-setup {
+    display: block; /* Ensures block-level display */
+    text-align: center;
+    float: none;
+    clear: both;   /* Clears any floats */
+    font-family: 'Courier New', monospace; /* Minesweeper-like font */
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.game-setup form {
+    margin: 15px 0;
+}
+
+.game-setup table {
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid rgb(102, 102, 102);
+}
+
+.game-setup td {
+    border: 3px solid darkgrey;
+    text-align: center;
+    vertical-align: middle;
+    background-color: rgb(189, 189, 189);
+}
+
+.game-setup input[type="number"] {
+    width: 50px; /* Adjust the width as needed */
+}
+
+.game-setup button {
+    display: block;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* styles for the experiment */
+.instructions {
+    font-family: 'Courier New', monospace; /* Minesweeper-like font */
+    text-align: center;
+}
+
+.instructions .header {
+    font-size: 24px;
+}
+
+.response-options {
+    display: flex;
+    justify-content: center;
+    gap: 120px;
+    margin-top: 10px;
+}
+
+.option {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.fa-keyboard {
+    color: #333; /* Adjust the color as needed */
+}

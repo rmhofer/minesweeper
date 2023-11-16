@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minesweeper Game</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <div class="contents-wrapper">
+        {% include 'game_board.html' %}
+        {% include 'game_setup.html' %}
+    </div>
+</body>
+</html>

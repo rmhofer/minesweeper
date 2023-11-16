@@ -1,18 +1,17 @@
-// game.js
-// function tied to an event listener that updates the game state when a cell is clicked
-function cellLeftClicked(x, y) {
-    // Handle left click logic
-    query(x, y, 0);
-    // Add your left click handling code here
+function query(x, y) {
+    // make a query on left click
+    makeMove(x, y, 0);
 }
 
-function cellRightClicked(event, x, y) {
+function flag(event, x, y) {
+    // place/toggle a flag on right click
     event.preventDefault(); // Prevent the default context menu
-    query(x, y, 1);
+    makeMove(x, y, 1);
 }
 
-function query(x, y, action) {
-    fetch('/query', {
+function makeMove(x, y, action) {
+    // interact with the game to perform the corresponding action
+    fetch('/move', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -21,13 +20,13 @@ function query(x, y, action) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data.result); // You can use this for additional logic or notifications
-        updateGameBoard(data.state);
+        renderGameState(data.state, [x, y, action]);
     })
     .catch(error => console.error('Error:', error));
 }
 
-function updateGameBoard(gameState) {
+function renderGameState(gameState, move=null) {
+    // call to render the game according to the contents of current_game_state
     gameState.forEach((row, x) => {
         row.forEach((cell, y) => {
             const cellElement = document.getElementById(`cell-${x}-${y}`);
@@ -40,7 +39,7 @@ function updateGameBoard(gameState) {
             // add styling based on whether cell has been revealed
             cellElement.classList.add(cell >= 0 ? 'revealed' : 'unrevealed');
 
-            // add styling to the revealed cells (numbers including 0)
+            // add number styling to the revealed cells
             if (cell >= 1 && cell <= 8) {
                 cellElement.classList.add(`number-${cell}`);
             } else {
@@ -49,25 +48,32 @@ function updateGameBoard(gameState) {
 
             // add styling for bombs
             if (cell == -2) {
-                cellElement.classList.add(`bomb`);
+                cellElement.classList.add(`mine`);
+                cellElement.classList.add(`revealed`);
             }
 
             // add styling for flags
             if (cell == -3) {
                 cellElement.classList.add(`flag`);
             }
+
+            // add styling for probe (if present)
+            if (cell == -4) {
+                cellElement.textContent = '?'
+                cellElement.classList.add(`probe`);
+            }
+
+            // make the background red if a mine was revealed
+            if (move && x === move[0] && y === move[1] && cell == -2) {
+                cellElement.classList.add('red-background');
+            }
         });
     });
-}
-
-// Function to initialize the game with the initial state from the server
-function initializeGame(initialState) {
-    updateGameBoard(initialState);
 }
 
 // When the DOM is fully loaded, initialize the game
 document.addEventListener('DOMContentLoaded', function() {
     // Convert the initial game state from Flask to a JavaScript array
     let initialState = JSON.parse(document.getElementById('initialState').textContent);
-    initializeGame(initialState);
+    renderGameState(initialState);
 });

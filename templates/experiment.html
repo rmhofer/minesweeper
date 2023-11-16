@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minesweeper Game</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <div class="contents-wrapper">
+        
+        <!-- minesweeper game board -->
+        {% include 'game_board.html' %}
+        
+        <!-- experiment instructions -->
+        <div class="instructions">
+            <p class="header">Does the '?'-marked location contain a mine?</p>
+            <div class="response-options">
+                <span class="option">[Q] NO</span>
+                <!-- <span class="option">[T] CAN'T NOW</span> -->
+                <span class="option">[P] YES</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- load the correct response variable passed from app.py -->
+    <script type="text/javascript">
+        var gameBoard = {{ game_board | tojson | safe }};
+        var gameState = {{ game_state | tojson | safe }};
+    </script>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="{{ url_for('static', filename='js/experiment.js') }}"></script>
+</body>
+</html>

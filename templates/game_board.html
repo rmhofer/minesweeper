@@ -1,0 +1,25 @@
+<div class="game-board-container">
+    <table>
+        {% for row in range(game_state|length) %}
+            <tr>
+                {% for col in range(game_state[row]|length) %}
+                <td id="cell-{{ row }}-{{ col }}"
+                    {% if interaction_enabled %}
+                    onclick="query({{ row }}, {{ col }})" 
+                    oncontextmenu="flag(event, {{ row }}, {{ col }})"
+                    {% endif %}>
+                    {{ game_state[row][col] if game_state[row][col] >= 0 else '*' }}
+                </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<!-- Hidden element to store the initial game state -->
+<script type="application/json" id="initialState">
+    {{ game_state|tojson }}
+</script>
+
+<!-- Link to the external JavaScript file -->
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
