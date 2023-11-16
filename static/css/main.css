@@ -1,0 +1,87 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Courier New', monospace; /* Minesweeper-like font */
+}
+
+.game-wrapper {
+    text-align: center; /* Center aligns child content */
+}
+
+.game-container {
+    margin: 40px;
+    display: block; /* Ensures block-level display */
+    clear: both;   /* Clears any floats */
+}
+
+.game-controls {
+    display: block; /* Ensures block-level display */
+    text-align: center;
+    float: none;
+    clear: both;   /* Clears any floats */
+}
+
+.game-controls form {
+    margin: 15px 0;
+}
+
+.game-controls table {
+    margin: 0 auto;
+}
+
+.game-controls input[type="number"] {
+    width: 50px; /* Adjust the width as needed */
+}
+
+.game-controls button {
+    display: block;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+td {
+    width: 25px;  /* Adjust the width as needed */
+    height: 25px; /* Adjust the height as needed */
+    border: 3px solid darkgrey;
+    text-align: center;
+    vertical-align: middle;
+    background-color: rgb(189, 189, 189);
+    font-weight: bold;
+    font-size: 22px;
+}
+
+/* Styles for unrevealed cells */
+td.unrevealed {
+    border-top: 3px solid rgb(255, 255, 255);
+    border-left: 3px solid rgb(255, 255, 255);
+    border-bottom: 3px solid rgb(123, 123, 123);
+    border-right: 3px solid rgb(123, 123, 123);
+    /* background-color: white; */
+}
+
+/* Styles for revealed cells */
+td.revealed {
+    border: 1px solid rgb(123, 123, 123);
+    padding: 3px;
+}
+
+td.bomb { background-color: red; }
+td.flag { background-color: yellow; }
+td.number-0 { color: rgb(189, 189, 189); }
+td.number-1 { color: blue; }
+td.number-2 { color: green; }
+td.number-3 { color: red; }
+td.number-4 { color: navy; }
+td.number-5 { color: maroon; }
+td.number-6 { color: teal; }
+td.number-7 { color: black; }
+td.number-8 { color: gray; }
