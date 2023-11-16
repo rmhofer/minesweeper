@@ -32,22 +32,29 @@ def move():
 
 @app.route('/experiment')
 def experiment():
-    # 'is there a mine?' experiment
-    global game
-    
-    # create a new game and simulate a number of rounds
-    game = Game(length=length, width=width, num_mines=num_mines)
-    game.simulate_gameplay(num_moves=4)
-    
-    # find an unseen square that's adjacent to a number
-    probe = game.find_valid_probe()
-    
-    current_game_state = game.current_game_state.tolist()
-    current_game_state[probe[0]][probe[1]] = -4 # use -4 to represent probe location
+    current_game_state, game_board = create_new_trial()
     return render_template('experiment.html', 
                            game_state=current_game_state, 
-                           game_board=game.game_board.tolist(), 
+                           game_board=game_board, 
                            interaction_enabled=False)
+
+@app.route('/load_trial', methods=['POST'])
+def load_trial():
+    current_game_state, game_board = create_new_trial()
+    return jsonify({
+        'game_state': current_game_state, 
+        'game_board': game_board
+    })
+
+def create_new_trial():
+    global game
+    game = Game(length=length, width=width, num_mines=num_mines)
+    game.simulate_gameplay(num_moves=4)
+
+    probe = game.find_valid_probe()
+    current_game_state = game.current_game_state.tolist()
+    current_game_state[probe[0]][probe[1]] = -4  # Use -4 to represent probe location
+    return current_game_state, game.game_board.tolist()
 
 if __name__ == '__main__':
     app.run(debug=True)
