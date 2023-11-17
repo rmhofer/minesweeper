@@ -63,6 +63,9 @@
 .game-board-container td.green-background { 
     background-color: green !important; 
 }
+.game-board-container td.black-font-color { 
+    color: black !important; 
+}
 
 .game-board-container td.number-0 { color: rgb(189, 189, 189); }
 .game-board-container td.number-1 { color: blue; }

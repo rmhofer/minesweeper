@@ -3,10 +3,10 @@ document.addEventListener('keydown', function(event) {
     var responseCorrect = false;
     var probePosition = null;
 
-    // Get the row and column position of where the gameState array equals -4 (probe position)
+    // Get the row and column position of where the gameState array equals -5 (probe position)
     gameState.forEach((row, x) => {
         row.forEach((cell, y) => {
-            if (cell === -4) {
+            if (cell === -5) {
                 probePosition = { x, y };
                 minePresent = gameBoard[x][y] === -1; // Check if the gameBoard array equals -1 at that position
             }
@@ -49,6 +49,17 @@ document.addEventListener('keydown', function(event) {
     setTimeout(loadNextTrial, 900); // ISI 500ms
 });
 
+var solutionShown = false;
+function toggleSolved() {
+    // game_state
+    if (!solutionShown) {
+        renderGameState(solvedGameState)
+        solutionShown = true;
+    } else {
+        renderGameState(gameState)
+        solutionShown = false;
+    }  
+}
 
 function loadNextTrial() {
     window.location.href = '/experiment'; // Redirects the browser to the 'experiment' route

@@ -7,7 +7,7 @@ app = Flask(__name__)
 # Default values
 length = 10
 width = 10
-num_mines = 10
+num_mines = 12
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -32,29 +32,38 @@ def move():
 
 @app.route('/experiment')
 def experiment():
-    current_game_state, game_board = create_new_trial()
+    current_game_state, solved_game_state, game_board = create_new_trial()
     return render_template('experiment.html', 
                            game_state=current_game_state, 
+                           solved_game_state=solved_game_state,
                            game_board=game_board, 
                            interaction_enabled=False)
 
-@app.route('/load_trial', methods=['POST'])
-def load_trial():
-    current_game_state, game_board = create_new_trial()
-    return jsonify({
-        'game_state': current_game_state, 
-        'game_board': game_board
-    })
+# @app.route('/load_trial', methods=['POST'])
+# def load_trial():
+#     current_game_state, game_board = create_new_trial()
+#     return jsonify({
+#         'game_state': current_game_state, 
+#         'game_board': game_board
+#     })
 
 def create_new_trial():
     global game
     game = Game(length=length, width=width, num_mines=num_mines)
     game.simulate_gameplay(num_moves=4)
-
     probe = game.find_valid_probe()
+    
+    # store the current game state
     current_game_state = game.current_game_state.tolist()
-    current_game_state[probe[0]][probe[1]] = -4  # Use -4 to represent probe location
-    return current_game_state, game.game_board.tolist()
+    
+    # engage the solver to solve
+    game.solve(max_steps=10)
+    
+    # prepare game state and solved game state
+    current_game_state[probe[0]][probe[1]] = -5  # Use -5 to represent probe location
+    solved_game_state = game.current_game_state.tolist()
+    
+    return current_game_state, solved_game_state, game.game_board.tolist()
 
 if __name__ == '__main__':
     app.run(debug=True)

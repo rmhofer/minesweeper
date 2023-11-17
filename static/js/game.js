@@ -59,6 +59,12 @@ function renderGameState(gameState, move=null) {
 
             // add styling for probe (if present)
             if (cell == -4) {
+                cellElement.textContent = 'X'
+                cellElement.classList.add('black-font-color');
+            }
+
+            // add styling for probe (if present)
+            if (cell == -5) {
                 cellElement.textContent = '?'
                 cellElement.classList.add(`probe`);
             }

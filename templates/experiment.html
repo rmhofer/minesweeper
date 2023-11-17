@@ -20,12 +20,16 @@
             </div>
         </div>
 
+        <div class="toggle-button">
+            <button type="submit" onclick="toggleSolved()">Toggle Solution</button>
+        </div>
     </div>
 
     <!-- load the correct response variable passed from app.py -->
     <script type="text/javascript">
         var gameBoard = {{ game_board | tojson | safe }};
         var gameState = {{ game_state | tojson | safe }};
+        var solvedGameState = {{ solved_game_state | tojson | safe }};
     </script>
 
     <!-- Link to the external JavaScript file -->
