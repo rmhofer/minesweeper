@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from game import Game
+from game_solver import Solver
 import json
 
 app = Flask(__name__)
@@ -50,14 +51,15 @@ def experiment():
 def create_new_trial():
     global game
     game = Game(length=length, width=width, num_mines=num_mines)
-    game.simulate_gameplay(num_moves=4)
-    probe = game.find_valid_probe()
+    game.make_random_move(num_moves=4)
+    probe = game.find_adjacent_to_number()
     
     # store the current game state
     current_game_state = game.current_game_state.tolist()
     
     # engage the solver to solve
-    game.solve(max_steps=10)
+    solver = Solver(solver_type='naive')
+    solver.solve(game, max_steps=10)
     
     # prepare game state and solved game state
     current_game_state[probe[0]][probe[1]] = -5  # Use -5 to represent probe location

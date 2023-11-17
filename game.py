@@ -1,6 +1,5 @@
 import numpy as np
 import json
-import hashlib
 import random
 
 # Set the random seed
@@ -12,7 +11,36 @@ class Game:
     
     def __init__(self, length=None, width=None, num_mines=None, 
                  game_board=None, game_states=None, file_path=None):  
+        """
+        Initialize a new instance of the Game class.
+
+        The Game object represents a minesweeper-like game with a board of specified dimensions 
+        (length x width) and a certain number of mines (num_mines) distributed across the board.
+
+        The game state reflects the current visible state of the game to the player or an agent.
+        It includes an array, game_states, which records the history of all game states 
+        and the moves that led to those states. Each game state provides insight into the board's 
+        current state, such as revealed cells, flagged mines, and yet-to-be-revealed cells.
+            
+        example game_board          example game_state
+        -----------------------		-----------------------
+        |                 1 1 |		|                 1 * |
+        | 1 1             1 M |		| 1 1             1 F |
+        | M 1             1 1 |		| F 1             1 1 |
+        | 1 1                 |		| 1 1                 |
+        |     1 1 1     1 1 1 |		|     1 1 1     1 1 1 |
+        |     1 M 1 1 1 3 M 2 |		|     1 F 1 1 1 3 F * |
+        |     1 2 2 2 M 3 M 2 |		|     1 * * * * * * * |
+        |   1 1 2 M 2 2 3 2 1 |		|   1 1 * * * * * * 1 |
+        | 1 2 M 3 2 3 2 M 1   |		| 1 2 F * * * * * * * |
+        | M 2 1 2 M 2 M 2 1   |		| * * * * * * * * * * |
+        -----------------------		-----------------------
         
+        Initialize a Game instance in one of three ways:
+        1. From a JSON file, rebuilding the game state from saved data.
+        2. Using provided game board and states, useful for testing specific scenarios.
+        3. Creating a new game with specified length, width, and number of mines.
+        """
         if file_path is not None:
             # Initialize from a JSON file
             with open(file_path, 'r') as file:
@@ -47,33 +75,43 @@ class Game:
         # show the game board and current game state
         self.print_game()
     
-    def is_valid(self):
-        # TODO function to check if a game or game state representation is valid
+    def has_unique_solution(self):
+        """
+        Placeholder for a function to check if the current game configuration has a unique solution.
+        Currently not implemented.
+        """
+        pass
+    
+    def is_valid_game(self):
+        """
+        Placeholder for a function to verify the validity of a game.
+        It should check for errors in the game board setup or state representation.
+        Currently not implemented.
+        """
         pass
     
     def log(self, message):
-        """ Log a message if logging is enabled """
+        """ Print a log message if logging is enabled in the Game class. """
         if Game.logging:
             print(message)
     
     def print_game(self):
-        # Pretty pring: Prepare replacements for game_board and game_state
-        '''
-            0:      no mines nearby
-            1-8:    number of mines nearby (do not replace)
-            -1:     mine
-        '''
+        """
+        Pretty print the current game board and game state side by side.
+        Uses custom replacements to visually represent different elements of the game.
+        """
+        # 0:      no mines nearby
+        # 1-8:    number of mines nearby (do not replace)
+        # -1:     mine
         game_board_replacements = {'0': ' ', '-1': 'M'}
         
-        '''
-            0:      no mines nearby
-            1-8:    number of mines nearby (do not replace)
-            -1:     unseen
-            -2:     mine
-            -3:     flag placed
-            -4:     safe (no mine)
-            -5:     probe location
-        '''
+        # 0:      no mines nearby
+        # 1-8:    number of mines nearby (do not replace)
+        # -1:     unseen
+        # -2:     mine
+        # -3:     flag placed
+        # -4:     safe (no mine)
+        # -5:     probe location
         game_state_replacements = {'0': ' ', '-1': '*', '-2': '*', '-3': 'F', '-4': 'X', '-5': 'P'}
 
         # Convert game_board and current game_state to string with replacements
@@ -89,7 +127,11 @@ class Game:
             print(board_line + '\t\t' + state_line)
     
     def board_to_string(self, board, replace):
-        # Generate a string representation of a board with replacements
+        """
+        Convert a game board to a string representation.
+        Takes a board (either game board or game state) and a dictionary of replacements
+        for better visualization.
+        """
         border = '-' * (2 * self.width + 3)
         board_str = border + '\n'
         for row in board:
@@ -105,6 +147,10 @@ class Game:
         return board_str
 
     def initialize_game_board(self):
+        """
+        Initialize a new game board with mines placed randomly.
+        Also calculates and populates the board with numbers indicating adjacent mines.
+        """
         # Create the mine vector [1 if mine and 0 otherwise] and shuffle it
         mine_vector = np.array([1] * self.num_mines + [0] * (self.length * self.width - self.num_mines))
         np.random.shuffle(mine_vector)
@@ -134,7 +180,10 @@ class Game:
         return self.game_board
 
     def reveal(self, x, y):
-        """ Recursively reveal cells starting from (x, y) """
+        """
+        Recursively reveal cells starting from the specified location (x, y).
+        Reveals adjacent cells if the revealed cell is empty (has no adjacent mines).
+        """
         if self.current_game_state[x, y] != -1 or self.game_board[x, y] == -1:
             return
 
@@ -149,12 +198,32 @@ class Game:
     
     def move(self, x, y, action):
         """ 
-            move can be one of [0, 1, 2]
-            0: make a query
-            1: place a flag
-            2: place a 'safe' marker (only used by solver)
-            Valid? Check if out of bounds or game has ended 
+        Process a player's move based on the action at the coordinates (x, y).
+        The action can be: 
+        0 - query (reveal the cell), 
+        1 - place or remove a flag, 
+        2 - mark as safe (used by solvers).
+        Validates the move and updates the game state accordingly.
         """
+        if not self.is_move_valid(x, y, action):
+            return False
+
+        if action == 0:
+            self.query_position(x, y)
+        elif action == 1:
+            self.toggle_flag(x, y)
+        elif action == 2:
+            self.mark_safe(x, y)
+
+        # store this move and the corresponding game state
+        self.game_states.append({
+            "move" : (x, y, action), 
+            "game_state" : np.copy(self.current_game_state)
+        })
+        return True
+    
+    def is_move_valid(self, x, y, action):
+        """ Validate the move. Check if it's within bounds, the game is ongoing, and the action is correct. """
         if (not self.gameplay_enabled):
             self.log("Error: Gampeplay disabled.")
             return False
@@ -164,56 +233,50 @@ class Game:
         if action not in [0, 1, 2]:
             self.log("Error: Not a valid move")
             return False 
-        
-        if action == 0:
-            # query position (x, y)
-            if self.current_game_state[x, y] == -3: 
-                self.log("Error: Cannot reveal flagged square.")
-                return False
-        
-            if self.game_board[x, y] == -1:
-                # end game and reveal location of all mines
-                self.log("Log: You clicked on a bomb! :(")
-                self.gameplay_enabled = False
-                self.current_game_state[self.game_board == -1] = -2
-            else:
-                # reveal (x, y) and adjacent empty squares
-                self.reveal(x, y)
-        
-        if action == 1:
-            # place/toggle a flag at (x, y)
-            if self.current_game_state[x, y] >= 0:
-                self.log("Error: Flags can only be placed on unseen squares")
-                return False
-            
-            # toggle between -1 (no flag) and -3 (flag)
-            self.current_game_state[x, y] = -4 - self.current_game_state[x, y]
-            
-            # check if all mines have been flagged
-            if np.all((self.current_game_state == -4) == (self.game_board == -1)):
-                self.gameplay_enabled = False
-                self.log("Log: You won! :)")
-        
-        if action == 2:
-            # mentally mark as no mine without querying position
-            if self.current_game_state[x, y] != -1:
-                self.log("Error: Only unseen squares can be marked as 'clear'")
-                return False
-            self.current_game_state[x, y] = -4
-        
-        # store this move and the corresponding game state
-        self.game_states.append({
-            "move" : (x, y, action), 
-            "game_state" : np.copy(self.current_game_state)
-        })
         return True
+    
+    def query_position(self, x, y):
+        """ Handle querying a position on the board. """
+        # query position (x, y)
+        if self.current_game_state[x, y] == -3: 
+            self.log("Error: Cannot reveal flagged square.")
+            return False
+    
+        if self.game_board[x, y] == -1:
+            # end game and reveal location of all mines
+            self.log("Log: You clicked on a bomb! :(")
+            self.gameplay_enabled = False
+            self.current_game_state[self.game_board == -1] = -2
+        else:
+            # reveal (x, y) and adjacent empty squares
+            self.reveal(x, y)
 
-    def generate_game_hash(self):
-        # TODO: generate a unique hash for each game
-        pass
+    def toggle_flag(self, x, y):
+        """ Handle placing or removing a flag on the board. """
+        if self.current_game_state[x, y] >= 0:
+            self.log("Error: Flags can only be placed on unseen squares")
+            return False
+        
+        # toggle between -1 (no flag) and -3 (flag)
+        self.current_game_state[x, y] = -4 - self.current_game_state[x, y]
+        
+        # check if all mines have been flagged
+        if np.all((self.current_game_state == -4) == (self.game_board == -1)):
+            self.gameplay_enabled = False
+            self.log("Log: You won! :)")
+    
+    def mark_safe(self, x, y):
+        """ Mark a cell as safe without querying. """
+        if self.current_game_state[x, y] != -1:
+            self.log("Error: Only unseen squares can be marked as 'clear'")
+            return False
+        self.current_game_state[x, y] = -4
     
     def convert_to_serializable(self, obj):
-        # Convert data to a serializable format
+        """
+        Convert the game data to a format that is serializable in JSON.
+        Handles conversion for numpy arrays, dictionaries, and lists.
+        """
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, dict):
@@ -224,6 +287,10 @@ class Game:
             return obj
     
     def generate_json(self, file_name):
+        """
+        Generate and save the current game state to a JSON file.
+        Converts game data to a serializable format before writing to the file.
+        """
         data = {
             "game_board": self.convert_to_serializable(self.game_board),
             "game_states": self.convert_to_serializable(self.game_states)
@@ -232,6 +299,11 @@ class Game:
             file.write(json.dumps(data)) # TODO: deal with JSON formatting
             
     def play(self):
+        """
+        The main game loop that handles player input and updates the game state.
+        Allows the player to make moves, save the game, and displays the updated game state.
+        Handles invalid inputs and termination conditions.
+        """
         while self.gameplay_enabled:  # Continue playing until the game is over
             # Wait for user input
             user_input = input("Enter your move (format 'x y action', where action is 0 for uncover and 1 for flag): ")
@@ -251,23 +323,37 @@ class Game:
             except ValueError as e:
                 print(f"Invalid input: {e}")
     
-    def simulate_gameplay(self, num_moves):
+    def make_random_move(self, num_moves, avoid_mines=True):
+        """
+        Make a specified number of random moves, avoiding mines if specified.
+        Useful for testing or simulating random gameplay.
+        
+        TODO: ensure that each move is unique
+        """
         for _ in range(num_moves):
             if not self.gameplay_enabled:
                 break
 
-            # Get locations that are not mines
-            non_mine_locations = np.where(self.game_board != -1)
-
+            if avoid_mines:
+                # Get locations that are not mines
+                locations_considered = np.where(self.game_board != -1)
+            else:
+                # Get all locations
+                locations_considered = np.where(self.game_board < 9)
+            
             # Randomly choose a non-mine location
-            idx = random.randrange(len(non_mine_locations[0]))
-            x, y = non_mine_locations[0][idx], non_mine_locations[1][idx]
+            idx = random.randrange(len(locations_considered[0]))
+            x, y = locations_considered[0][idx], locations_considered[1][idx]
 
             # Make a query on this location
             self.move(x, y, 0)  # Assuming 0 is the action for uncovering a cell
 
-    def find_valid_probe(self):
-        ''' returns a sqaure from the game state that is adjacent to a number'''
+    def find_adjacent_to_number(self):
+        """
+        Find and return a random square in the game state that is adjacent to a revealed number.
+        Useful for making informed decisions in game strategies.
+        """
+        # TODO: rename and refactor this
         rows, cols = self.current_game_state.shape
         valid_locations = []
     
@@ -294,89 +380,23 @@ class Game:
         else:
             return None
 
-    def solve(self, max_steps=5):
-        ''' Iteratively solve the Minesweeper game for a given number of steps. '''
-        reasoning_steps_matrix = np.zeros(shape=self.current_game_state.shape) - 1
-        reasoning_steps_matrix[self.current_game_state == -1] = 0
-        
-        for step in range(max_steps):
-            flag_positions = []
-            clear_positions = []
-            for x in range(self.length):
-                for y in range(self.width):
-                    if self.current_game_state[x, y] > 0:
-                        new_flag_positions, new_clear_positions = self.mark_adjacent_flags(self.current_game_state, x, y)
-                        flag_positions += new_flag_positions
-                        clear_positions += new_clear_positions
-            # print("flag level", step + 1, list(set(flag_positions)))
-            # print("clear level", step + 1, list(set(clear_positions)))
-            
-            for (x, y) in list(set(flag_positions)):
-                self.move(x, y, 1)
-                reasoning_steps_matrix[x, y] = step + 1
-            
-            for (x, y) in list(set(clear_positions)):
-                self.move(x, y, 2)
-                reasoning_steps_matrix[x, y] = step + 1
-            # self.print_game()
-        print(reasoning_steps_matrix)
-        return reasoning_steps_matrix
-        
-    def mark_adjacent_flags(self, game_state, x, y):
-        '''
-        Marks unexplored squares adjacent to a numbered square with flags
-        if the number of unexplored squares equals the number on the square minus adjacent flags.
-        '''
-        adjacent_unexplored = []
-        new_flag_positions = []
-        new_clear_positions = []
-        adjacent_flags = 0
-        
-        # Check adjacent squares
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                if dx == 0 and dy == 0:
-                    continue  # Skip the current square
 
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < game_state.shape[0] and 0 <= ny < game_state.shape[1]:
-                    if game_state[nx, ny] == -1:
-                        adjacent_unexplored.append((nx, ny))
-                    elif game_state[nx, ny] == -3:
-                        adjacent_flags += 1
+if __name__ == '__main__':        
+    # TESTING
 
-        if (game_state[x, y] - adjacent_flags == 0):
-            for nx, ny in adjacent_unexplored:
-                new_clear_positions.append((nx, ny))
-        
-        # Mark with flags if conditions are met
-        if len(adjacent_unexplored) == game_state[x, y] - adjacent_flags:
-            for nx, ny in adjacent_unexplored:
-                new_flag_positions.append((nx, ny))
+    # initialize from file 
+    game = Game(file_path='./data/test.json')
 
-        # remove duplicate positions (each flag should only be applied once)
-        return new_flag_positions, new_clear_positions
-    
-# TESTING
+    # initialize from array
+    game_board = [
+        [0,  1,  1,  1],
+        [0,  1, -1,  1],
+        [0,  2,  2,  2],
+        [0,  1, -1,  1]
+    ]
+    game_state = []
+    game = Game(game_board=game_board, game_states=game_state)
 
-# initialize from file 
-# game = Game(file_path='./data/test.json')
-
-# initialize from array
-# game_board = [
-#     [0,  1,  1,  1],
-#     [0,  1, -1,  1],
-#     [0,  2,  2,  2],
-#     [0,  1, -1,  1]
-# ]
-# game_state = []
-# game = Game(game_board=game_board, game_state=game_state)
-
-# random initialization
-# game = Game(length=10, width=10, num_mines=5)
-# game.play()
-
-# game = Game(length=5, width=5, num_mines=5)
-# game.simulate_gameplay(3)
-# game.print_game()
-# game.solve()
+    # random initialization
+    game = Game(length=10, width=10, num_mines=5)
+    game.play()
