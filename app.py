@@ -40,26 +40,20 @@ def experiment():
                            game_board=game_board, 
                            interaction_enabled=False)
 
-# @app.route('/load_trial', methods=['POST'])
-# def load_trial():
-#     current_game_state, game_board = create_new_trial()
-#     return jsonify({
-#         'game_state': current_game_state, 
-#         'game_board': game_board
-#     })
-
 def create_new_trial():
     global game
     game = Game(length=length, width=width, num_mines=num_mines)
     game.make_random_move(num_moves=4)
-    probe = game.find_adjacent_to_number()
+    
+    # define a solver to create a random probe
+    solver = Solver(solver_type='naive')    
+    probe = solver.sample_probe(game.current_game_state)
     
     # store the current game state
     current_game_state = game.current_game_state.tolist()
     
     # engage the solver to solve
-    solver = Solver(solver_type='naive')
-    solver.solve(game, max_steps=10)
+    solver.solve(game)
     
     # prepare game state and solved game state
     current_game_state[probe[0]][probe[1]] = -5  # Use -5 to represent probe location

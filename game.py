@@ -2,10 +2,6 @@ import numpy as np
 import json
 import random
 
-# Set the random seed
-np.random.seed(1)
-random.seed(1)
-
 class Game:
     logging = True
     
@@ -126,7 +122,7 @@ class Game:
         for board_line, state_line in zip(game_board_lines, game_state_lines):
             print(board_line + '\t\t' + state_line)
     
-    def board_to_string(self, board, replace):
+    def board_to_string(self, board, replace={}):
         """
         Convert a game board to a string representation.
         Takes a board (either game board or game state) and a dictionary of replacements
@@ -348,40 +344,12 @@ class Game:
             # Make a query on this location
             self.move(x, y, 0)  # Assuming 0 is the action for uncovering a cell
 
-    def find_adjacent_to_number(self):
-        """
-        Find and return a random square in the game state that is adjacent to a revealed number.
-        Useful for making informed decisions in game strategies.
-        """
-        # TODO: rename and refactor this
-        rows, cols = self.current_game_state.shape
-        valid_locations = []
+
+if __name__ == '__main__':    
+    # Set the random seed
+    np.random.seed(1)
+    random.seed(1)    
     
-        # Check adjacent cells
-        def is_valid_location(r, c):
-            for dr in range(-1, 2):
-                for dc in range(-1, 2):
-                    if dr == 0 and dc == 0:
-                        continue
-                    if 0 <= r + dr < rows and 0 <= c + dc < cols:
-                        if self.current_game_state[r + dr, c + dc] in range(1, 9):
-                            return True
-            return False
-        
-        # Find all -1 locations with at least one adjacent number (1-8)
-        for i in range(rows):
-            for j in range(cols):
-                if self.current_game_state[i, j] == -1 and is_valid_location(i, j):
-                    valid_locations.append((i, j))
-                    
-        # Randomly select one of these locations
-        if valid_locations:
-            return random.choice(valid_locations)
-        else:
-            return None
-
-
-if __name__ == '__main__':        
     # TESTING
 
     # initialize from file 
