@@ -29,6 +29,14 @@ To access the reasoning experiment go to http://127.0.0.1:5000/experiment.
 
 ![Experiment](static/img/gameplay-2.png)
 
+
+## Solver
+
+The file game_solver.py contains a 'naive' deduction-based solver that deduces the position of mines from the information given and engages contradiction based reasoning if it gets stuck. The output of the solver can be toggled on or off in the reasoning experiment.
+
+![Solver](static/img/gameplay-3.png)
+
+
 ### Game representation
 
 JSON Data Structure
