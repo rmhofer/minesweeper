@@ -3,13 +3,14 @@
 <head>
     <title>Minesweeper Game</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="contents-wrapper">
         
-        <!-- minesweeper game board -->
-        {% include 'game_board.html' %}
-        
+        <!-- create an empty div for the game board -->
+        <div id="gameBoardContainer" class="game-board-container"></div>
+
         <!-- experiment instructions -->
         <div class="instructions">
             <p class="header">Does the '?'-marked location contain a mine?</p>
@@ -20,19 +21,14 @@
             </div>
         </div>
 
-        <div class="toggle-button">
-            <button type="submit" onclick="toggleSolved()">Toggle Solution</button>
+        <!-- button to toggle solution provided by the solver -->
+        <div class="toggle-button" style="margin-top: 50px;">
+            <button id="toggleSolveButton" type="button">Toggle Solution</button>
         </div>
     </div>
 
-    <!-- load the correct response variable passed from app.py -->
-    <script type="text/javascript">
-        var gameBoard = {{ game_board | tojson | safe }};
-        var gameState = {{ game_state | tojson | safe }};
-        var solvedGameState = {{ solved_game_state | tojson | safe }};
-    </script>
-
-    <!-- Link to the external JavaScript file -->
+    <!-- Link to external JavaScript files -->
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
     <script src="{{ url_for('static', filename='js/experiment.js') }}"></script>
 </body>
 </html>

@@ -11,18 +11,43 @@ function flag(event, x, y) {
 
 function makeMove(x, y, action) {
     // interact with the game to perform the corresponding action
-    fetch('/move', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+    $.ajax({
+        url: '/move',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({x: x, y: y, action: action}),
+        success: function(data) {
+            if (data.result) {
+                // only update game state if the move is valid
+                renderGameState(data.game_state, [x, y, action]);
+            }
         },
-        body: JSON.stringify({x: x, y: y, action: action}),
-    })
-    .then(response => response.json())
-    .then(data => {
-        renderGameState(data.state, [x, y, action]);
-    })
-    .catch(error => console.error('Error:', error));
+        error: function(error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+function renderGameBoard(gameState, interactionEnabled) {
+    if (!gameState) return;
+    
+    let htmlContent = '<table>';
+    for (let row = 0; row < gameState.length; row++) {
+        htmlContent += '<tr>';
+        for (let col = 0; col < gameState[row].length; col++) {
+            // Add interaction attributes if interaction is enabled
+            let interactionAttributes = '';
+            if (interactionEnabled) {
+                interactionAttributes = ` onclick="query(${row}, ${col})" oncontextmenu="flag(event, ${row}, ${col})"`;
+            }
+
+            htmlContent += `<td id="cell-${row}-${col}"${interactionAttributes}></td>`;
+        }
+        htmlContent += '</tr>';
+    }
+    htmlContent += '</table>';
+
+    document.getElementById('gameBoardContainer').innerHTML = htmlContent;
 }
 
 function renderGameState(gameState, move=null) {
@@ -79,7 +104,13 @@ function renderGameState(gameState, move=null) {
 
 // When the DOM is fully loaded, initialize the game
 document.addEventListener('DOMContentLoaded', function() {
-    // Convert the initial game state from Flask to a JavaScript array
-    let initialState = JSON.parse(document.getElementById('initialState').textContent);
-    renderGameState(initialState);
+    // Check if the 'gameState' element exists
+    var gameStateElement = document.getElementById('gameState');
+    
+    if (gameStateElement) {
+        // Convert the initial game state from Flask to a JavaScript array
+        gameState = JSON.parse(gameStateElement.textContent);
+        renderGameBoard(gameState, true);
+        renderGameState(gameState);
+    }
 });

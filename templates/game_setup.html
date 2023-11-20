@@ -1,19 +1,20 @@
 <div class="game-setup">
-    <form action="/" method="post">
+    <form action="/game" method="post">
         <table>
             <tr>
                 <td>Length:</td>
-                <td><input type="number" name="length" value="{{ game_object.length }}"></td>
+                <td><input type="number" name="length" value="{{ length }}"></td>
             </tr>
             <tr>
                 <td>Width:</td>
-                <td><input type="number" name="width" value="{{ game_object.width }}"></td>
+                <td><input type="number" name="width" value="{{ width }}"></td>
             </tr>
             <tr>
                 <td>Mines:</td>
-                <td><input type="number" name="mines" value="{{ game_object.num_mines }}"></td>
+                <td><input type="number" name="mines" value="{{ num_mines }}"></td>
             </tr>
         </table>
+
         <button type="submit">New Game</button>
     </form>
 </div>

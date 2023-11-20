@@ -3,11 +3,23 @@
 <head>
     <title>Minesweeper Game</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="contents-wrapper">
-        {% include 'game_board.html' %}
+        
+        <!-- create an empty div for the game board -->
+        <div id="gameBoardContainer" class="game-board-container"></div>
+
         {% include 'game_setup.html' %}
     </div>
+    
+    <!-- Hidden element to store the initial game state -->
+    <script type="application/json" id="gameState">
+        {{ game_state|tojson }}
+    </script>
+
+    <!-- Link to the external JavaScript file -->
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 import numpy as np
-from game import Game
+from game_logic import Game
 import itertools
 import random
 

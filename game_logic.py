@@ -71,6 +71,53 @@ class Game:
         # show the game board and current game state
         self.print_game()
     
+    def serialize(self):
+        """
+        Serialize the Game object to a JSON-compatible format.
+        """
+        # Convert NumPy arrays to lists for JSON compatibility
+        game_board_list = self.game_board.tolist()
+        current_game_state_list = self.current_game_state.tolist()
+        
+        # Convert each game state's NumPy array to a list
+        game_states_list = [{'move': state['move'], 'game_state': state['game_state'].tolist()} for state in self.game_states]
+
+        # Create a dictionary of all attributes to be serialized
+        serialized_data = {
+            'length': int(self.length),
+            'width': int(self.width),
+            'num_mines': int(self.num_mines),
+            'game_board': game_board_list,
+            'game_states': game_states_list,
+            'current_game_state': current_game_state_list,
+            'gameplay_enabled': self.gameplay_enabled
+        }
+
+        return serialized_data
+    
+    @classmethod
+    def deserialize(cls, data):
+        """
+        Deserialize a dictionary into a Game object.
+
+        Args:
+        data (dict): A dictionary containing the serialized Game object data.
+
+        Returns:
+        Game: A new instance of Game initialized with the deserialized data.
+        """
+        # Convert lists back to NumPy arrays
+        game_board = np.array(data['game_board'])
+        game_states = [{'move': state['move'], 'game_state': np.array(state['game_state'])} for state in data['game_states']]
+
+        # Create a new Game instance using the deserialized data
+        game = cls(
+            game_board=game_board,
+            game_states=game_states
+        )
+        game.gameplay_enabled = data['gameplay_enabled']
+        return game
+    
     def has_unique_solution(self):
         """
         Placeholder for a function to check if the current game configuration has a unique solution.
@@ -240,7 +287,7 @@ class Game:
     
         if self.game_board[x, y] == -1:
             # end game and reveal location of all mines
-            self.log("Log: You clicked on a bomb! :(")
+            self.log("Log: You clicked on a mine! :(")
             self.gameplay_enabled = False
             self.current_game_state[self.game_board == -1] = -2
         else:

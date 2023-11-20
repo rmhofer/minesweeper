@@ -21,7 +21,7 @@ Once Flask is installed, you can start the server by running app.py.
 python app.py
 ```
 
-The default path for the application is http://127.0.0.1:5000/ (for free gameplay).
+To play an open ended game visit http://127.0.0.1:5000/game.
 
 ## Reasoning experiment
 
