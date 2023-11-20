@@ -1,5 +1,0 @@
-- [x] Solver
-- [ ] Add buttons to specify probe
-- [ ] Dockerize
-- [x] Create experiment loop
-- [x] Data saving (sqlite db)
