@@ -29,7 +29,7 @@ class Solver:
         Parameters:
         - max_steps (int): Maximum number of steps to attempt in solving the game.
         """
-        if self.solver_type == 'naive':
+        if (self.solver_type == 'naive') or (self.solver_type == "brute_force"):
             return self.naive_solver(game, max_steps, **kwargs)
         else:
             raise NotImplementedError(f"Solver type '{self.solver_type}' is not implemented.")
@@ -45,7 +45,7 @@ class Solver:
         - **kwargs: Additional keyword arguments for customizing the solver's behavior.
         """        
         # keeps track of how many steps required for each undecided square
-        reasoning_steps_matrix = np.zeros(shape=game.current_game_state.shape).astype(np.int) - 1
+        reasoning_steps_matrix = np.zeros(shape=game.current_game_state.shape).astype(int) - 1
         reasoning_steps_matrix[game.current_game_state == -1] = 0
         
         for step in range(max_steps):
@@ -53,6 +53,7 @@ class Solver:
             for (x, y) in self.get_numbered_squares(game.current_game_state):
                 # find simple direct deductions
                 moves += self.deduce_moves_from_cell(game.current_game_state, x, y)
+
 
             contradiction_found = False
             if not moves:  # If no moves found by naive approach, try contradiction
@@ -67,10 +68,11 @@ class Solver:
                 game.move(x, y, action)
                 reasoning_steps_matrix[x, y] = step + 1
 
+
             # Termination condition
             if not moves and not contradiction_found:
-                print(f'No further deductions possible. Terminating after {step+1} steps.\nDeduction steps:')
-                print(game.board_to_string(reasoning_steps_matrix, replace={'-1' : ' '}))
+                #print(f'No further deductions possible. Terminating after {step+1} steps.\nDeduction steps:')
+                #print(game.board_to_string(reasoning_steps_matrix, replace={'-1' : ' '}))
                 break
         
             
@@ -200,26 +202,26 @@ if __name__ == '__main__':
     random.seed(1)
     
     # TESTING
-    # game = Game(length=10, width=10, num_mines=10)
-    # game.make_random_move(3)
-    # game.print_game()
-    
-    game_board = [
-        [0,  0,  0,  0,  0,  0,  0,  0],
-        [0,  0,  0,  0,  0,  0,  0,  0],
-        [0,  0,  0,  0,  0,  0,  0,  0],
-        [0,  0,  0,  1,  1,  1,  0,  0],
-        [1,  1,  2,  2, -1,  2,  1,  1],
-        [1, -1,  3, -1,  2,  2, -1,  1],
-        [1,  2, -1,  2,  1,  1,  1,  1],
-        [0,  1,  1,  1,  0,  0,  0,  0],
-    ]
-    game_states = []
-    
-    game = Game(game_board=game_board, game_states=game_states)
-    game.move(0, 0, 0)
-    game.move(5, 2, 0)
+    game = Game(length=5, width=5, num_mines=4)
+    game.make_random_move(1)
     game.print_game()
+
+    # game_board = [
+    #     [0,  0,  0,  0,  0,  0,  0,  0],
+    #     [0,  0,  0,  0,  0,  0,  0,  0],
+    #     [0,  0,  0,  0,  0,  0,  0,  0],
+    #     [0,  0,  0,  1,  1,  1,  0,  0],
+    #     [1,  1,  2,  2, -1,  2,  1,  1],
+    #     [1, -1,  3, -1,  2,  2, -1,  1],
+    #     [1,  2, -1,  2,  1,  1,  1,  1],
+    #     [0,  1,  1,  1,  0,  0,  0,  0],
+    # ]
+    # game_states = []
+    
+    # game = Game(game_board=game_board, game_states=game_states)
+    # game.move(0, 0, 0)
+    # game.move(5, 2, 0)
+    #game.print_game()
     
     # solve game
     naive_solver = Solver('naive')

@@ -227,6 +227,8 @@ class Game:
         Recursively reveal cells starting from the specified location (x, y).
         Reveals adjacent cells if the revealed cell is empty (has no adjacent mines).
         """
+
+
         if self.current_game_state[x, y] != -1 or self.game_board[x, y] == -1:
             return
 
@@ -281,6 +283,7 @@ class Game:
     def query_position(self, x, y):
         """ Handle querying a position on the board. """
         # query position (x, y)
+
         if self.current_game_state[x, y] == -3: 
             self.log("Error: Cannot reveal flagged square.")
             return False
@@ -314,6 +317,13 @@ class Game:
             self.log("Error: Only unseen squares can be marked as 'clear'")
             return False
         self.current_game_state[x, y] = -4
+
+
+    def is_cell_revealed(self, x, y):
+        return self.current_game_state[x, y] >= 0
+
+    def is_cell_flagged(self, x, y):
+        return self.current_game_state[x, y] == -3
     
     def convert_to_serializable(self, obj):
         """
@@ -413,5 +423,5 @@ if __name__ == '__main__':
     game = Game(game_board=game_board, game_states=game_state)
 
     # random initialization
-    game = Game(length=10, width=10, num_mines=5)
+    game = Game(length=5, width=5, num_mines=3)
     game.play()
