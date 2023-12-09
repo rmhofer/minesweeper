@@ -1,40 +1,121 @@
+from enum import IntEnum
 import itertools as it
 import random
 
 import numpy as np
 
-from game_solver import Solver
+debug = False
+
+
+def bp():
+    if debug:
+        breakpoint()
+
+
+class BoardState(IntEnum):
+    unknown = -1
+    given = 0
+    proved_mine = 1
+    proved_clear = 2
 
 
 class MineSweeper:
-    def __init__(self, board, x, y, n_mines):
+    def __init__(self, board, x, y, n_mines, discount=0.99):
         self.board = board.copy()
         H = board.shape[0]
         W = board.shape[1]
+        self.H = H
+        self.W = W
 
         self.x = x
         self.y = y
         self.n_mines = n_mines
 
-        self.solver = Solver("naive")
-
-        # 0 - given free, -1 - unknown, 1 - proved mine, 2 - proved safe
-        # states = []
-        # for assignment in it.product(*([[-1, 1, 2]] * n_mines)):
-        #     for m in it.combinations([(i, j) for i in range(H) for j in range(W) if board[i, j] == -1], n_mines):
-        #         s = np.zeros((H, W))
-        #         for idx, (i, j) in enumerate(m):
-        #             s[i, j] = assignment[idx]
-        #         states.append(s)
+        self.unknown = BoardState.unknown
+        self.given = BoardState.given
+        self.proved_mine = BoardState.proved_mine
+        self.proved_clear = BoardState.proved_clear
 
         action = ["flag", "clear"]
         for i in range(H):
             for j in range(W):
                 if board[i, j] > 0:
-                    action.append(f"think-{i}-{j}")
+                    # action.append(f"1_{i}-{j}")
+                    action.append([(i, j)])
+
+        for (i, j), (k, l) in it.product(
+            it.product(range(H), range(W)), it.product(range(H), range(W))
+        ):
+            if (i, j) == (k, l):
+                continue
+            if board[i, j] <= 0 or board[k, l] <= 0:
+                continue
+            if abs(i - k) + abs(j - l) > 2:
+                continue
+
+            # action.append(f"2_{i}-{j}_{k}-{l}")
+            action.append([(i, j), (k, l)])
 
         self.actions = action
-        self.discount = 0.99
+        self.discount = discount
+
+    def solve_one(self, state, cell):
+        x, y = cell[0]
+        mini_board = state[
+            max(x - 1, 0) : min(x + 2, self.H), max(y - 1, 0) : min(y + 2, self.W)
+        ]
+        count = self.board[x, y]
+
+        n_mines = count - (mini_board == self.proved_mine).sum()
+        if n_mines == 0:
+            new_val = self.proved_clear.value
+        elif n_mines == (mini_board == self.unknown).sum():
+            new_val = self.proved_mine.value
+        else:
+            return
+            yield
+
+        for i, j in it.product((x - 1, x, x + 1), (y - 1, y, y + 1)):
+            if (i, j) == (x, y):
+                continue
+            if i < 0 or i >= self.H or j < 0 or j >= self.W:
+                continue
+
+            if state[i, j] == self.unknown:
+                yield i, j, new_val
+
+    def solve_multiple(self, state, cells):
+        unknowns = {}
+        A = np.zeros((len(cells), len(cells) * 8))
+        b = np.zeros(len(cells))
+
+        n_unknowns = 0
+        for idx, (x, y) in enumerate(cells):
+            count = self.board[x, y]
+            for i, j in it.product((x - 1, x, x + 1), (y - 1, y, y + 1)):
+                if (i, j) == (x, y):
+                    continue
+                if i < 0 or i >= self.H or j < 0 or j >= self.W:
+                    continue
+
+                if state[i, j] == self.unknown:
+                    unknown_idx = unknowns.setdefault((i, j), n_unknowns)
+                    A[idx, unknown_idx] = 1
+                    n_unknowns += 1 if unknown_idx == n_unknowns else 0
+
+                if state[i, j] == self.proved_mine:
+                    count -= 1
+
+            b[idx] = count
+
+        A = A[:, :n_unknowns]
+
+        x = np.linalg.lstsq(A, b, rcond=None)[0]
+        for (i, j), unknown_idx in unknowns.items():
+            if np.isclose(x[unknown_idx], 0):
+                yield i, j, self.proved_clear.value
+            if np.isclose(x[unknown_idx], 1):
+                yield i, j, self.proved_mine.value
 
     def p_mine(self, s, x, y):
         if s[x, y] == 1:
@@ -42,45 +123,43 @@ class MineSweeper:
         elif s[x, y] == 0:
             return 0.0
 
-        return (self.n_mines - (s == 1).sum()) / (s == -1).sum()
-
-    def reward(self, s, a):
-        if a == "flag":
-            return 10 * self.p_mine(s, self.x, self.y)
-        elif a == "clear":
-            return 10 * (1 - self.p_mine(s, self.x, self.y))
-
-        return -1
-
-    def score(self, s, a, snew):
-        if a in ("flag", "stop"):
-            return 0.0
-
-        snew = self.tr(s, a)[0]
-        return 1.0 if np.all(snew == s) else 0.0
+        return (self.n_mines - (s == self.proved_mine).sum()) / (
+            s == self.unknown
+        ).sum()
 
     def tr(self, s, a):
         if a == "flag":
-            return [-1], [1], 10 * self.p_mine(s, self.x, self.y), True
+            return [s], [0], 10 * self.p_mine(s, self.x, self.y), True
         if a == "clear":
-            return [-1], [1], 10 * (1 - self.p_mine(s, self.x, self.y)), True
+            return [s], [0], 10 * (1 - self.p_mine(s, self.x, self.y)), True
 
-        cell = [int(l) for l in a.split("-")[1:]]
-
-        board = self.board.copy()
-        # force observed state to match things that we've already proved
-        board[s == 1] = -3
-        board[s == 2] = -4
+        solver = self.solve_one
+        if len(a) > 1:
+            solver = self.solve_multiple
 
         snew = s.copy()
-        for move in self.solver.deduce_moves_from_cell(board, cell[0], cell[1]):
-            x, y, a = move
-            if a == 1:  # deduced that x, y is mine
-                snew[x, y] = 1
-            elif a == 2:  # deduced that x, y is clear
-                snew[x, y] = 2
+        for move in solver(s, a):
+            x, y, v = move
+            snew[x, y] = v
 
-        return [snew], [1], -0.5, False
+        return [snew], [1], -0.5 * 2 ** len(a), False
+
+    def traverse(self, s):
+        states = [s]
+
+        names = {self.hash(s)}
+        stack = [s]
+
+        while len(stack) > 0:
+            s = stack.pop()
+            for a in range(2, len(self.actions)):
+                snew, _, _, done = self.tr(s, self.actions[a])
+                if self.hash(snew[0]) not in names:
+                    names.add(self.hash(snew[0]))
+                    stack.append(snew[0])
+                    states.append(snew[0])
+
+        return states
 
     def hash(self, s):
         return str(s)
@@ -93,7 +172,7 @@ class Grid:
 
         self.goal = (H - 1, W - 1)
 
-        self.actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # right, left, up, down
+        self.actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         self.discount = 0.95
 
     def tr(self, s, a):
@@ -120,7 +199,10 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
 
     def softmax(mdp, s, Q):
         s = mdp.hash(s)
-        return random.choices(range(len(mdp.actions)), np.exp(0.1 * Q[s]) / np.exp(0.1 * Q[s]).sum())[0]
+        return random.choices(
+            range(len(mdp.actions)), np.exp(0.1 * Q[s]) / np.exp(0.1 * Q[s]).sum()
+        )[0]
+        # return random.choices(range(len(mdp.actions) - 2), np.exp(0.1 * Q[s][2:]) / np.exp(0.1 * Q[s][2:]).sum())[0]
 
     def backup(history, Q, N, G):
         for s, a, reward in reversed(history):
@@ -130,7 +212,7 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
             G = reward + mdp.discount * G
 
     for _ in range(max_iter):
-        # breakpoint()
+        bp()
         s = root
         # selection
         done = False
@@ -148,21 +230,22 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
 
             s = random.choices(ns, ps)[0]
 
-        # breakpoint()
+        bp()
         if done:
             backup(history, Q, N, 0)
             continue
 
         Q[mdp.hash(s)] = np.zeros(len(mdp.actions))
+
         N[mdp.hash(s)] = np.zeros(len(mdp.actions))
 
         G = 0
         i = 0
 
         while not done and i < max_depth:
-            a = random.choice(range(len(mdp.actions)))
+            # a = random.choice(range(len(mdp.actions)))
             ns, ps, reward, done = mdp.tr(s, mdp.actions[a])
-            G += (mdp.discount ** (i - 1)) * reward
+            G += (mdp.discount**i) * reward
 
             if i == 0:
                 history.append((s, a, reward))
@@ -170,27 +253,66 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
             s = random.choice(ns)
             i += 1
 
-        # breakpoint()
+        bp()
 
         s, a, reward = history.pop(-1)
         Q[mdp.hash(s)][a] = G
         N[mdp.hash(s)][a] = 1
         backup(history, Q, N, G)
 
-    return Q
+    return Q, N
+
+
+def vi(mdp, states, rtol=1e-3):
+    V = {mdp.hash(s): 0 for s in states}
+    delta = 1
+    while delta > rtol:
+        delta = 0
+        for s in states:
+            v_old = V[mdp.hash(s)]
+            V[mdp.hash(s)] = max(
+                [
+                    sum(
+                        p[0] * (r + mdp.discount * V[mdp.hash(snew[0])])
+                        if not done
+                        else r
+                        for snew, p, r, done in [mdp.tr(s, a)]
+                    )
+                    for a in mdp.actions
+                ]
+            )
+            delta = max(delta, abs(V[mdp.hash(s)] - v_old))
+
+    Q = {}
+    for s in states:
+        actions = np.zeros(len(mdp.actions))
+        Q[mdp.hash(s)] = actions
+        for i, a in enumerate(mdp.actions):
+            snew, ps, r, done = mdp.tr(s, a)
+            actions[i] = sum(
+                (p * r + mdp.discount * V[mdp.hash(snew)] if not done else r)
+                for snew, p in zip(snew, ps)
+            )
+
+    return Q, V
 
 
 if __name__ == "__main__":
     # g = Grid(4, 4)
-    game_board = np.array(
+    board = np.array(
         [
             [1, 1, 1, 1, 1],
             [1, -1, -1, -1, -1],
         ]
     )
+    board = np.array([[1, 2, 1], [-1, -1, -1]])
 
-    s = game_board.copy()
+    s = board.copy()
     s[s != -1] = 0
 
-    m = MineSweeper(game_board, 1, 4, 2)
-    Q = mcts(m, s)
+    # m = MineSweeper(board, 1, 4, 2)
+    m = MineSweeper(board, 1, 2, 2)
+    states = m.traverse(s)
+    Q, V = value_iteration(m, states)
+    # Q, N = mcts(m, s, max_iter=500)
+    # print(Q[m.hash(s)])
