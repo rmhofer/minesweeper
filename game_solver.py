@@ -21,7 +21,7 @@ class Solver:
         else:
             return None
         
-    def solve(self, game, max_steps=10, **kwargs):
+    def solve(self, game, max_steps=10,use_contradiction=True, **kwargs):
         """
         Iteratively solve the Minesweeper game for a given number of steps.
         Delegates to the specified solver method based on the solver type.
@@ -30,11 +30,11 @@ class Solver:
         - max_steps (int): Maximum number of steps to attempt in solving the game.
         """
         if (self.solver_type == 'naive') or (self.solver_type == "brute_force"):
-            return self.naive_solver(game, max_steps, **kwargs)
+            return self.naive_solver(game, max_steps, use_contradiction, **kwargs)
         else:
             raise NotImplementedError(f"Solver type '{self.solver_type}' is not implemented.")
         
-    def naive_solver(self, game, max_steps, **kwargs):
+    def naive_solver(self, game, max_steps, use_contradiction, **kwargs):
         """
         A naive approach to solving the Minesweeper game, focusing on simple, direct deductions, followed by contradiction testing for more complex situations.
 
@@ -55,8 +55,11 @@ class Solver:
                 moves += self.deduce_moves_from_cell(game.current_game_state, x, y)
 
 
+
+
+
             contradiction_found = False
-            if not moves:  # If no moves found by naive approach, try contradiction
+            if use_contradiction and (not moves):  # If no moves found by naive approach, try contradiction
                 for (x, y) in self.get_unexplored_adjacent_to_number(game.current_game_state):
                     if self.test_contradiction(game.current_game_state, game, x, y):
                         contradiction_found = True

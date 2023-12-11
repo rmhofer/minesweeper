@@ -3,8 +3,9 @@ from game_solver import Solver
 import numpy as np
 import random
 import itertools
+import copy
 
-class ExtendedSolver(Solver):
+class BruteForceSolver(Solver):
     def __init__(self, game):
         super().__init__(solver_type='brute_force')
         self.game = game
@@ -13,7 +14,7 @@ class ExtendedSolver(Solver):
         # Run naive solver first 
         super().solve(self.game, max_steps)
 
-        self.game.print_game()
+        #self.game.print_game()
         candidate_cells = self.get_candidate_cells()
         remaining_mines = self.game.num_mines - self.get_flagged_mines_count()
 
@@ -25,8 +26,6 @@ class ExtendedSolver(Solver):
 
         # Deduce mines and safe cells based on consistent combinations
         self.make_deductions(consistent_combinations)
-
-        print()
 
     def get_candidate_cells(self):
         candidate_cells = []
@@ -88,7 +87,7 @@ class ExtendedSolver(Solver):
 
 
 if __name__ == "__main__":
-    # # Set the random seed
+    # TESTING
     #np.random.seed(3)
     #random.seed(1)
     game = Game(length=4, width=4, num_mines=6)
@@ -110,7 +109,6 @@ if __name__ == "__main__":
     #     [-1, 2, 2, 2, 2,-1],
     #     [-1,-1,-1,-1,-1,-1],
     # ]
-    # TESTING
 
     #game = Game(game_board=game_board, game_states=game_states)
 
@@ -118,10 +116,14 @@ if __name__ == "__main__":
     game.make_random_move(5)
     game.print_game()
 
+    naive_solver = Solver()
+    reasoning_steps_matrix = copy.deepcopy(naive_solver.solve(game))
+    game.print_game()
 
-    solver = ExtendedSolver(game)
 
-    solver.solve()
+    bf_solver = BruteForceSolver(game)
+    bf_solver.solve()
 
 
     game.print_game()
+    print(reasoning_steps_matrix)
