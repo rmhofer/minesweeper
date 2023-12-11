@@ -322,6 +322,9 @@ class Game:
     def is_cell_revealed(self, x, y):
         return self.current_game_state[x, y] >= 0
 
+    def is_cell_safe(self, x, y):
+        return self.current_game_state[x, y] == -4
+
     def is_cell_flagged(self, x, y):
         return self.current_game_state[x, y] == -3
     
