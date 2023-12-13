@@ -41,6 +41,7 @@ def make_stimulus(length, width, num_mines):
             solution = copy.deepcopy(game.current_game_state)
             game.reset_state()
 
+
             return game,  naive_solution, naive_steps, solution
 
 
@@ -80,6 +81,7 @@ def make_solvable_games(n, length, width, num_mines, file_name):
                 "width":width,
                 "num_mines":num_mines,
                 "game_board": game.game_board,
+                "game_state": game.current_game_state,
                 "naive_solution": naive_solution,
                 "naive_steps": naive_steps,
                 "solution": solution,
@@ -110,5 +112,5 @@ if __name__ == "__main__":
 
 
     length, width, num_mines = 5,5,6
-    make_solvable_games(25, length, width, num_mines, 
+    make_solvable_games(24, length, width, num_mines, 
                         f"stimuli_{length}_{width}_{num_mines}.json")
