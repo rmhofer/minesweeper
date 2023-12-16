@@ -45,14 +45,14 @@ class Game:
             self.game_states = [{'move' : game_round['move'], 'game_state' : np.asarray(game_round['game_state'])} for game_round in data['game_states']] # parse into numpy array data structure
             self.length, self.width = self.game_board.shape
             self.num_mines = np.sum(self.game_board == -1)
-            self.log("game initialized from file")
+            #self.log("game initialized from file")
         elif game_board is not None and game_states is not None:
             # Initialize with provided game board and states
             self.game_board = np.array(game_board)
             self.game_states = game_states
             self.length, self.width = self.game_board.shape
             self.num_mines = np.sum(self.game_board == -1)
-            self.log("game initialized from user input")
+            #self.log("game initialized from user input")
         elif length is not None and width is not None and num_mines is not None:
             # Initialize a new game
             self.length = length
@@ -60,7 +60,7 @@ class Game:
             self.num_mines = num_mines
             self.game_board = self.initialize_game_board()
             self.game_states = []
-            self.log("game randomly initialized from user input")
+            #self.log("game randomly initialized from user input")
         else:
             raise ValueError("Invalid arguments for game initialization")
         
@@ -69,7 +69,12 @@ class Game:
         self.gameplay_enabled = True
         
         # show the game board and current game state
-        self.print_game()
+        # self.print_game()
+
+    def reset_state(self):
+        self.current_game_state = (self.current_game_state * (self.current_game_state >= 0) -
+                                  (1 * (self.current_game_state < 0)))
+
     
     def serialize(self):
         """
@@ -138,7 +143,7 @@ class Game:
         if Game.logging:
             print(message)
     
-    def print_game(self):
+    def print_game(self, state_info=True):
         """
         Pretty print the current game board and game state side by side.
         Uses custom replacements to visually represent different elements of the game.
@@ -155,7 +160,11 @@ class Game:
         # -3:     flag placed
         # -4:     safe (no mine)
         # -5:     probe location
-        game_state_replacements = {'0': ' ', '-1': '*', '-2': '*', '-3': 'F', '-4': 'X', '-5': 'P'}
+
+        if state_info:
+            game_state_replacements = {'0': ' ', '-1': '*', '-2': '*', '-3': 'F', '-4': 'X', '-5': 'P'}
+        else:
+            game_state_replacements = {'0': ' ', '-1': '*', '-2': '*', '-3': '*', '-4': '*', '-5': '*'}
 
         # Convert game_board and current game_state to string with replacements
         game_board_str = self.board_to_string(self.game_board, game_board_replacements)
@@ -227,6 +236,8 @@ class Game:
         Recursively reveal cells starting from the specified location (x, y).
         Reveals adjacent cells if the revealed cell is empty (has no adjacent mines).
         """
+
+
         if self.current_game_state[x, y] != -1 or self.game_board[x, y] == -1:
             return
 
@@ -281,6 +292,7 @@ class Game:
     def query_position(self, x, y):
         """ Handle querying a position on the board. """
         # query position (x, y)
+
         if self.current_game_state[x, y] == -3: 
             self.log("Error: Cannot reveal flagged square.")
             return False
@@ -314,6 +326,16 @@ class Game:
             self.log("Error: Only unseen squares can be marked as 'clear'")
             return False
         self.current_game_state[x, y] = -4
+
+
+    def is_cell_revealed(self, x, y):
+        return self.current_game_state[x, y] >= 0
+
+    def is_cell_safe(self, x, y):
+        return self.current_game_state[x, y] == -4
+
+    def is_cell_flagged(self, x, y):
+        return self.current_game_state[x, y] == -3
     
     def convert_to_serializable(self, obj):
         """
@@ -413,5 +435,5 @@ if __name__ == '__main__':
     game = Game(game_board=game_board, game_states=game_state)
 
     # random initialization
-    game = Game(length=10, width=10, num_mines=5)
+    game = Game(length=5, width=5, num_mines=3)
     game.play()

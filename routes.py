@@ -5,6 +5,8 @@ from game_logic import Game
 from game_solver import Solver
 import os
 import json
+import numpy as np
+import random
 
 
 @app.route('/game', methods=['GET', 'POST'])
@@ -47,16 +49,24 @@ def experiment():
     session['prolific_id'] = prolific_id
 
     # reading stimuli from stimuli.json if they exist
-    if os.path.exists('./stimuli.json'):
-        with open('./stimuli.json', 'r') as file:
+    if os.path.exists('./stimuli/stimuli_5_5_6.json'):
+        with open('./stimuli/stimuli_5_5_6.json', 'r') as file:
             stimuli = json.load(file)
     else:
         # Fallback to generating random stimuli
         stimuli = None
     session['stimuli'] = stimuli
-    
+
     # initialize other experiment variables
     session['trial_id'] = 0
+    probe_types = ["naive_easy_probe",
+                   "naive_hard_probe",
+                   "non_naive_probe"]*(len(stimuli)//3)
+
+    random.shuffle(probe_types)
+    session["probe_types"] = probe_types[:len(stimuli)]
+
+
     return render_template('experiment.html')
 
 @app.route('/get_stimulus', methods=['GET'])
@@ -64,34 +74,43 @@ def get_stimulus():
     prolific_id = session.get('prolific_id', 'default_id')
     stimuli = session.get('stimuli')
     trial_id = session.get('trial_id', 0)
+    probe_types = session.get('probe_types')
+    probe_type = probe_types[trial_id]
 
     probe = None
-    
+
     if stimuli is not None:
         # load stimulus from file (UNTESTED)
-        game_state_unsolved = stimuli[trial_id]['game_state']
-        game_board = stimuli[trial_id]['game_board']
-        game = Game(game_board=game_board, game_state=game_state_unsolved)
-        probe = stimuli[trial_id]['probe']
+        game_state_unsolved = np.array(stimuli[trial_id]['game_state'])
+        game_board = np.array(stimuli[trial_id]['game_board'])
+        game = Game(game_board=game_board,
+             game_states=[{"move":0, "game_state":game_state_unsolved}])
+        probe = stimuli[trial_id][probe_type]
+    
     else:
         # randomly create a new stimulus
         game = Game(length=10, width=10, num_mines=12)
         game.make_random_move(num_moves=4)
-    
+
+    game_state_unsolved = game.current_game_state.tolist()
+
     # define a solver to create a random probe
-    solver = Solver(solver_type='naive')
     if not probe: 
+        solver = Solver(solver_type='naive')
         probe = solver.sample_probe(game.current_game_state)
+        solver.solve(game)
+        game_state_solved = game.current_game_state.tolist()
+    else:
+        game_state_solved = stimuli[trial_id]["solution"]
+
+
 
     # store the current game state
-    game_state_unsolved = game.current_game_state.tolist()
     
     # engage the solver to solve
-    solver.solve(game)
     
     # prepare game state and solved game state
     game_state_unsolved[probe[0]][probe[1]] = -5  # Use -5 to represent probe location
-    game_state_solved = game.current_game_state.tolist()
     game_board = game.game_board.tolist()
         
     # incrementing trial variable
