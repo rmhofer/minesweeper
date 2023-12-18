@@ -1,15 +1,20 @@
-function query(x, y) {
-    // make a query on left click
-    makeMove(x, y, 0);
+function reveal(x, y) {
+    // reveal a square on left click
+    processUserInteraction(x, y, 0);
 }
 
-function flag(event, x, y) {
+function toggleFlag(event, x, y) {
     // place/toggle a flag on right click
     event.preventDefault(); // Prevent the default context menu
-    makeMove(x, y, 1);
+    processUserInteraction(x, y, 1);
 }
 
-function makeMove(x, y, action) {
+function toggleMarkSafe(x, y) {
+    // place/toggle a safe mark on right click
+    processUserInteraction(x, y, 2);
+}
+
+function processUserInteraction(x, y, action) {
     // interact with the game to perform the corresponding action
     $.ajax({
         url: '/move',
@@ -28,17 +33,21 @@ function makeMove(x, y, action) {
     });
 }
 
-function renderGameBoard(gameState, interactionEnabled) {
+function renderGameBoard(gameState, interactionMode) {
     if (!gameState) return;
     
     let htmlContent = '<table>';
     for (let row = 0; row < gameState.length; row++) {
         htmlContent += '<tr>';
         for (let col = 0; col < gameState[row].length; col++) {
-            // Add interaction attributes if interaction is enabled
+            // Add interaction attributes depending on interaction mode
             let interactionAttributes = '';
-            if (interactionEnabled) {
-                interactionAttributes = ` onclick="query(${row}, ${col})" oncontextmenu="flag(event, ${row}, ${col})"`;
+            if (interactionMode == 'standard') {
+                interactionAttributes = ` onclick="reveal(${row}, ${col})" oncontextmenu="toggleFlag(event, ${row}, ${col})"`;
+            } else if (interactionMode == 'exploratory') {
+                interactionAttributes = ` onclick="toggleMarkSafe(${row}, ${col})" oncontextmenu="toggleFlag(event, ${row}, ${col})"`;
+            } else {
+                // no user interaction possible
             }
 
             htmlContent += `<td id="cell-${row}-${col}"${interactionAttributes}></td>`;
@@ -82,10 +91,10 @@ function renderGameState(gameState, move=null) {
                 cellElement.classList.add(`flag`);
             }
 
-            // add styling for probe (if present)
+            // add styling for safe squares
             if (cell == -4) {
-                cellElement.textContent = 'X'
-                cellElement.classList.add('black-font-color');
+                // cellElement.textContent = 'X'
+                cellElement.classList.add('safe');
             }
 
             // add styling for probe (if present)

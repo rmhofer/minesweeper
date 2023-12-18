@@ -1,4 +1,4 @@
-from flask import render_template, jsonify, request, session
+from flask import render_template, jsonify, request, g, session, redirect, url_for
 from app import app
 from database import save_trial_data
 from game_logic import Game
@@ -7,6 +7,129 @@ import os
 import json
 import numpy as np
 import random
+
+
+
+@app.context_processor
+def inject_query_string():
+    g.query_string = request.query_string.decode('utf-8')
+    return dict(query_string=g.query_string)
+
+@app.route('/')
+def index():
+    query_string = request.query_string.decode('utf-8')
+    return redirect(url_for('consent') + '?' + query_string)
+
+@app.route('/<page_name>')
+def render_page(page_name):
+    valid_pages = ['consent', 'instructions', 'questionnaire']
+    if page_name in valid_pages:
+        return render_template(f'{page_name}.html')
+    else:
+        return "Page not found", 404
+
+@app.route('/experiment')
+def experiment():
+    # Parse information passed as part of the URL
+    params = request.args
+    prolific_id = params.get('PID', 'default_id')
+    session['prolific_id'] = prolific_id
+    
+    # debug mode
+    debug_mode_arg_value = params.get('debug', 'false')
+    session['debug'] = debug_mode_arg_value.lower() in ['true', '1', 'yes']
+
+    # reading stimuli from stimuli.json if they exist
+    if os.path.exists('./stimuli/stimuli_5_5_6.json'):
+        with open('./stimuli/stimuli_5_5_6.json', 'r') as file:
+            stimuli = json.load(file)
+    else:
+        # Fallback to generating random stimuli
+        stimuli = None
+    
+    # TODO: try to avoid storing this information in a session variable
+    session['stimuli'] = stimuli
+
+    # initialize other experiment variables
+    session['trial_id'] = 0
+    probe_types = ["naive_easy_probe",
+                   "naive_hard_probe",
+                   "non_naive_probe"] * (len(stimuli)//3)
+
+    random.shuffle(probe_types)
+    session["probe_types"] = probe_types[:len(stimuli)]
+
+    # render the experiment template
+    return render_template('experiment.html')
+
+
+@app.route('/submit_questionnaire', methods=['POST'])
+def submit_questionnaire():
+    # Process the form data and save it
+    questionnaire_data = request.form
+    # You can use your existing database functions or something similar to save the data
+    # save_questionnaire_data(questionnaire_data)
+    return render_template('thank_you.html')  # Redirect to a thank-you page
+
+
+@app.route('/get_stimulus', methods=['GET'])
+def get_stimulus():
+    # get information from session variables
+    stimuli = session.get('stimuli')
+    trial_id = session.get('trial_id', 0)
+    probe_types = session.get('probe_types')
+    probe_type = probe_types[trial_id]
+    probe = None
+    
+    if stimuli is not None:
+        # load stimulus from file
+        game_state_unsolved = np.array(stimuli[trial_id]['game_state'])
+        game_board = np.array(stimuli[trial_id]['game_board'])
+        game = Game(game_board=game_board,
+             game_states=[{"move":0, "game_state":game_state_unsolved}])
+        probe = stimuli[trial_id][probe_type]
+    else:
+        # randomly create a new stimulus
+        game = Game(length=10, width=10, num_mines=12)
+        game.make_random_move(num_moves=4)
+
+    if not probe: 
+        # define a solver to create a random probe
+        solver = Solver(solver_type='naive')
+        probe = solver.sample_probe(game.current_game_state)
+        
+        # store a copy of the current game state
+        game_state_copy = game.current_game_state.copy()
+        
+        # engage the solver (this will alter the game state)
+        solver.solve(game)
+        game.current_game_state = game_state_copy
+        game_state_solved = game.current_game_state.tolist()
+    else:
+        game_state_solved = stimuli[trial_id]["solution"]
+
+    # mark probe location
+    game.current_game_state[probe[0]][probe[1]] = -5  # Use -5 to represent probe location
+    
+    # save game in session object (for interactive gameplay)
+    session['game'] = game.serialize()
+    
+    # pass game varialbes as lists for rendering
+    game_state_unsolved = game.current_game_state.tolist()
+    game_board = game.game_board.tolist()
+    
+    # incrementing trial variable
+    session['trial_id'] = trial_id + 1
+    
+    # re-initialize session variable to store user actions
+    session['user_actions'] = []
+    
+    # return the data as json (convert numpy arrays to lists if neccesary)
+    return jsonify(game_state=game_state_unsolved, 
+                   game_state_solved=game_state_solved, 
+                   game_board=game_board, 
+                   interaction_mode='exploratory',  # Possible values: 'disabled', 'standard', 'exploratory'
+                   )
 
 
 @app.route('/game', methods=['GET', 'POST'])
@@ -18,12 +141,13 @@ def game():
 
     # serialize and store in session variable
     session['game'] = game.serialize()
-    return render_template('free_play.html', 
+    return render_template('game.html', 
                            game_state=game.current_game_state.tolist(), 
                            length=game.length,
                            width=game.width,
                            num_mines=game.num_mines,
-                           interaction_enabled=True)
+                           interaction_mode='standard') # Possible values: 'disabled', 'standard', 'exploratory'
+
 
 @app.route('/move', methods=['POST'])
 def move():
@@ -38,95 +162,25 @@ def move():
     result = game.move(x, y, action)
     new_game_state = game.current_game_state.tolist()
     
-    # serialize and store in session variable
+    # serialize and store information in session variables
     session['game'] = game.serialize()
+    user_actions = session.get('user_actions')
+    user_actions.append((x, y, action))
+    session['user_actions'] = user_actions
+
     return jsonify({'result': result, 'game_state': new_game_state})
 
-@app.route('/experiment')
-def experiment():    
-    # Parse information passed as part of the URL
-    prolific_id = request.args.get('PID', 'default_id')
-    session['prolific_id'] = prolific_id
-
-    # reading stimuli from stimuli.json if they exist
-    if os.path.exists('./stimuli/stimuli_5_5_6.json'):
-        with open('./stimuli/stimuli_5_5_6.json', 'r') as file:
-            stimuli = json.load(file)
-    else:
-        # Fallback to generating random stimuli
-        stimuli = None
-    session['stimuli'] = stimuli
-
-    # initialize other experiment variables
-    session['trial_id'] = 0
-    probe_types = ["naive_easy_probe",
-                   "naive_hard_probe",
-                   "non_naive_probe"]*(len(stimuli)//3)
-
-    random.shuffle(probe_types)
-    session["probe_types"] = probe_types[:len(stimuli)]
-
-
-    return render_template('experiment.html')
-
-@app.route('/get_stimulus', methods=['GET'])
-def get_stimulus():
-    prolific_id = session.get('prolific_id', 'default_id')
-    stimuli = session.get('stimuli')
-    trial_id = session.get('trial_id', 0)
-    probe_types = session.get('probe_types')
-    probe_type = probe_types[trial_id]
-
-    probe = None
-
-    if stimuli is not None:
-        # load stimulus from file (UNTESTED)
-        game_state_unsolved = np.array(stimuli[trial_id]['game_state'])
-        game_board = np.array(stimuli[trial_id]['game_board'])
-        game = Game(game_board=game_board,
-             game_states=[{"move":0, "game_state":game_state_unsolved}])
-        probe = stimuli[trial_id][probe_type]
-    
-    else:
-        # randomly create a new stimulus
-        game = Game(length=10, width=10, num_mines=12)
-        game.make_random_move(num_moves=4)
-
-    game_state_unsolved = game.current_game_state.tolist()
-
-    # define a solver to create a random probe
-    if not probe: 
-        solver = Solver(solver_type='naive')
-        probe = solver.sample_probe(game.current_game_state)
-        solver.solve(game)
-        game_state_solved = game.current_game_state.tolist()
-    else:
-        game_state_solved = stimuli[trial_id]["solution"]
-
-
-
-    # store the current game state
-    
-    # engage the solver to solve
-    
-    # prepare game state and solved game state
-    game_state_unsolved[probe[0]][probe[1]] = -5  # Use -5 to represent probe location
-    game_board = game.game_board.tolist()
-        
-    # incrementing trial variable
-    session['trial_id'] = trial_id + 1
-    
-    # return the data as json (convert numpy arrays to lists if neccesary)
-    return jsonify(game_state=game_state_unsolved, game_state_solved=game_state_solved, game_board=game_board, interaction_enabled=False)
 
 @app.route('/send_response', methods=['POST'])
 def send_response():
-    trial_data = request.json
     prolific_id = session.get('prolific_id', 'default_id')
-    trial_id = session.get('trial_id', 0)
+    trial_data = request.json
+    trial_data['trial_id'] = session.get('trial_id', 0)
+    user_actions = session.get('user_actions')
+    trial_data['user_actions'] = user_actions
     
     try:
-        save_trial_data(trial_data, trial_id, prolific_id)
+        save_trial_data(prolific_id, trial_data)
     except Exception as e:
         print(f"Error saving trial data: {e}")
         return jsonify(success=False, message="Failed to save trial data.")

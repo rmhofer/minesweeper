@@ -13,18 +13,31 @@
 
         <!-- experiment instructions -->
         <div class="instructions">
-            <p class="header">Does the '?'-marked location contain a mine?</p>
+            <p class="header">
+                Does the
+                <span class="minesweeper-unrevealed-square probe-location">?</span> 
+                marked location contain a mine?</p>
             <div class="response-options">
                 <span class="option">[Q] NO</span>
                 <!-- <span class="option">[T] CAN'T NOW</span> -->
                 <span class="option">[P] YES</span>
             </div>
+
+            <p style="margin: 50px auto; width: 680px; padding: 20px; background-color: rgb(236, 236, 236); font-size: 18px; line-height: 2.5">
+                Reminder: You can click right on an empty square 
+                <span class="minesweeper-unrevealed-square"></span> 
+                to place a flag 
+                <span class="minesweeper-unrevealed-square background-image-flag"></span> 
+                and left to place a safe mark 
+                <span class="minesweeper-unrevealed-square background-image-safe"></span>.
+            </p>
         </div>
 
+
         <!-- button to toggle solution provided by the solver -->
-        <div class="toggle-button" style="margin-top: 50px;">
+        <!-- <div class="toggle-button" style="margin-top: 150px;">
             <button id="toggleSolveButton" type="button">Toggle Solution</button>
-        </div>
+        </div> -->
     </div>
 
     <!-- Link to external JavaScript files -->

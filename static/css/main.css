@@ -31,6 +31,27 @@
     background-repeat: no-repeat;
 }
 
+.minesweeper-unrevealed-square {
+    display: inline-block;
+    width: 25px;  
+    height: 25px;
+    border: 3px solid darkgrey;
+    background-color: rgb(189, 189, 189);
+    background-position: center;
+    background-repeat: no-repeat;
+    vertical-align: middle; /* Aligns the image with the text */
+    border-top: 3px solid rgb(255, 255, 255);
+    border-left: 3px solid rgb(255, 255, 255);
+    border-bottom: 3px solid rgb(123, 123, 123);
+    border-right: 3px solid rgb(123, 123, 123);
+    box-shadow: 0 0 0 1px rgb(0, 0, 0); /* Additional border */
+    margin: 1px; /* Space for the additional border */
+    font-family: 'Courier New', monospace; /* Minesweeper-like font */
+    font-weight: bold;
+    font-size: 22px;
+    text-align: center;
+}
+
 .game-board-container td.unrevealed {
     border-top: 3px solid rgb(255, 255, 255);
     border-left: 3px solid rgb(255, 255, 255);
@@ -43,17 +64,22 @@
     padding: 3px;
 }
 
-.game-board-container td.probe { 
+.game-board-container td.probe, .probe-location { 
     color: white !important; 
     background-color: rgb(0, 0, 0) !important; 
 }
 
-.game-board-container td.mine { 
+.game-board-container td.mine, .background-image-mine { 
     background-image: url('/static/img/mine.png');
 }
 
-.game-board-container td.flag { 
+.game-board-container td.flag, .background-image-flag { 
     background-image: url('/static/img/flag.png');
+}
+
+.game-board-container td.safe, .background-image-safe { 
+    /* color: black !important;  */
+    background-image: url('/static/img/safe.png');
 }
 
 .game-board-container td.red-background { 

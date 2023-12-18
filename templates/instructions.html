@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment Instructions</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .instructions-container {
+            max-width: 700px;
+            margin: auto;
+            padding: 20px;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .img-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .start-button {
+            display: block;
+            padding: 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container instructions-container">
+        <h3 class="header">Experiment instructions</h3>
+        
+        <p>In this study, you will engage with game boards from the well-known computer game Minesweeper. The goal of Minesweeper is to clear a rectangular board containing hidden "mines" without detonating any of them. The game is played by revealing squares of the grid by clicking on them. If a square containing a mine is revealed, the game is over. If not, a digit is displayed in the square, indicating how many mines are adjacent to it. This helps the player deduce the positions of mines.</p>
+
+        <p>The boards you will encounter look like the following example:</p>
+        <div class="img-container">
+            <!-- Replace 'minesweeper-board.jpg' with the path to your actual image file -->
+            <img src="{{ url_for('static', filename='img/example-stimulus.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: auto;">
+        </div>
+
+        <p>During this experiment, one of the squares will be marked with a flag. Your task is to determine whether that square contains a mine. Each puzzle has a unique solution, and you will be presented with 20 problems of varying difficulty. After completing these challenges, we will ask you to provide some basic information. A performance bonus will be awarded based on the number of correctly solved puzzles.</p>
+
+        <!-- Start Experiment Button -->
+        <form action="{{ url_for('experiment') }}?{{ query_string }}">
+            <button type="submit" class="btn btn-primary start-button">Start Experiment</button>
+        </form>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -4,21 +4,23 @@ function startTrial() {
         // Start the reaction time timer
         const startTime = Date.now();
 
-        let game_state = data.game_state;
-        let game_state_solved = data.game_state_solved;
+        let gameState = data.game_state;
+        let gameBoard = data.game_board;
+        let gameStateSolved = data.game_state_solved;
+        let interactionMode = data.interaction_mode;
         let isSolvedStateShown = false;
         let probePosition = null, minePresent = false;
         
         // render the game board and game state
-        renderGameBoard(game_state);
-        renderGameState(game_state);
+        renderGameBoard(gameState, interactionMode);
+        renderGameState(gameState);
 
         // find the probe position and check if a mine is present
-        $.each(game_state, function(x, row) {
+        $.each(gameState, function(x, row) {
             $.each(row, function(y, cell) {
                 if (cell === -5) {
                     probePosition = { x, y };
-                    minePresent = data.game_board[x][y] === -1;
+                    minePresent = gameBoard[x][y] === -1;
                 }
             });
         });
@@ -40,18 +42,19 @@ function startTrial() {
 
                 // Record trial data
                 let trial_data = {
-                    'trial_id': null,
-                    'game_board': data.game_board, 
-                    'game_state': game_state, 
+                    'trial_id': null, // override later
+                    'game_board': gameBoard, 
+                    'game_state': gameState, 
                     'probe_position': probePosition,
                     'mine_present': minePresent,
-                    'user_response': userResponse,  // Corrected the spelling
+                    'user_response': userResponse,
                     'response_correct': responseCorrect,
-                    'reaction_time': reactionTime,
+                    'total_reaction_time': reactionTime,
                 };
                 
-                // update game board representation
-                $.each(data.game_board, function(x, row) {
+                // feedback: update game board representation
+                //  TODO
+                $.each(gameBoard, function(x, row) {
                     $.each(row, function(y, cell) {
                         let cellElement = $(`#cell-${x}-${y}`);
                         
@@ -69,14 +72,15 @@ function startTrial() {
                     });
                 });
 
-                // start the next trial (TODO: or end experiment)
+                // start the next trial (TODO: or end experiment when no more trials)
                 $.ajax({
                     url: '/send_response',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(trial_data),
                     success: function(response) {
-                        setTimeout(startTrial, 900); // Inter-Stimulus Interval (ISI)
+                        // console.log(response);
+                        setTimeout(startTrial, 1000); // Inter-Stimulus Interval (ISI)
                     },
                     dataType: 'json'
                 });
@@ -86,18 +90,19 @@ function startTrial() {
         // add event listener to the button with id #toggle
         function toggleSolve() {
             if (isSolvedStateShown) {
-                renderGameState(game_state);
+                renderGameState(gameState);
             } else {
-                renderGameState(game_state_solved);
+                renderGameState(gameStateSolved);
             }
             isSolvedStateShown = !isSolvedStateShown;
         }
 
         // Bind toggleSolve to the button
-        document.getElementById('toggleSolveButton').onclick = toggleSolve;
+        document.getElementById('toggleSolveButton')?.addEventListener('click', toggleSolve);
     });
 }
 
 $(document).ready(function() {
+    // automatically load the first stimulus when the page is loaded
     startTrial();
 });

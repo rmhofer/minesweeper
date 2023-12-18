@@ -267,7 +267,7 @@ class Game:
         elif action == 1:
             self.toggle_flag(x, y)
         elif action == 2:
-            self.mark_safe(x, y)
+            self.toggle_mark_safe(x, y)
 
         # store this move and the corresponding game state
         self.game_states.append({
@@ -286,7 +286,13 @@ class Game:
             return False
         if action not in [0, 1, 2]:
             self.log("Error: Not a valid move")
-            return False 
+            return False
+        if self.current_game_state[x, y] >= 0:
+            self.log("Error: Cannot perform action on numbered square.") 
+            return False
+        if self.current_game_state[x, y] == -5:
+            self.log("Error: Cannot perform action at probe location.") 
+            return False
         return True
     
     def query_position(self, x, y):
@@ -295,6 +301,10 @@ class Game:
 
         if self.current_game_state[x, y] == -3: 
             self.log("Error: Cannot reveal flagged square.")
+            return False
+        
+        if self.current_game_state[x, y] == -4: 
+            self.log("Error: Cannot reveal square marked as safe.")
             return False
     
         if self.game_board[x, y] == -1:
@@ -308,25 +318,20 @@ class Game:
 
     def toggle_flag(self, x, y):
         """ Handle placing or removing a flag on the board. """
-        if self.current_game_state[x, y] >= 0:
-            self.log("Error: Flags can only be placed on unseen squares")
-            return False
-        
-        # toggle between -1 (no flag) and -3 (flag)
-        self.current_game_state[x, y] = -4 - self.current_game_state[x, y]
+        # if square has a flag (-3), remove/toggle it, otherwise place one,
+        # overriding the placement of another marker if necessary        
+        self.current_game_state[x, y] = -1 if self.current_game_state[x, y] == -3 else -3
         
         # check if all mines have been flagged
         if np.all((self.current_game_state == -4) == (self.game_board == -1)):
             self.gameplay_enabled = False
             self.log("Log: You won! :)")
     
-    def mark_safe(self, x, y):
+    def toggle_mark_safe(self, x, y):
         """ Mark a cell as safe without querying. """
-        if self.current_game_state[x, y] != -1:
-            self.log("Error: Only unseen squares can be marked as 'clear'")
-            return False
-        self.current_game_state[x, y] = -4
-
+        # if square has a safe mark (-4), remove/toggle it, otherwise place one,
+        # overriding the placement of another marker if necessary     
+        self.current_game_state[x, y] = -1 if self.current_game_state[x, y] == -4 else -4
 
     def is_cell_revealed(self, x, y):
         return self.current_game_state[x, y] >= 0

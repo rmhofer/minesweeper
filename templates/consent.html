@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment Consent</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .consent-wrapper-class {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .consent-header {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div  class="container consent-wrapper-class">
+        <h1 class="consent-header">Consent Form for Participation in Psychological Research</h1>
+        <p>Welcome to this experiment. This is an experiment to investigate human reasoning conducted by University XYZ.</p>
+        <p>In the following sections, you will be presented with a series of tasks. Your responses will be recorded and analyzed to understand reasoning patterns. Please note that your participation in this experiment is completely voluntary, and you can withdraw at any time without any consequences.</p>
+        <p>All data collected in this study will be kept anonymous and used solely for research purposes.</p>
+        <p>If you agree to participate in this study, please click the "I Agree" button below. By clicking this button, you acknowledge that you have read and understood this consent form, and agree to participate in the research.</p>
+        <!-- Agreement Button -->
+        <form action="{{ url_for('instructions') }}?{{ query_string }}">
+            <button type="submit" class="btn btn-primary">I Agree</button>
+        </form>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
