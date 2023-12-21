@@ -24,11 +24,16 @@
 </head>
 <body>
     <div  class="container consent-wrapper-class">
-        <h1 class="consent-header">Consent Form for Participation in Psychological Research</h1>
-        <p>Welcome to this experiment. This is an experiment to investigate human reasoning conducted by University XYZ.</p>
-        <p>In the following sections, you will be presented with a series of tasks. Your responses will be recorded and analyzed to understand reasoning patterns. Please note that your participation in this experiment is completely voluntary, and you can withdraw at any time without any consequences.</p>
-        <p>All data collected in this study will be kept anonymous and used solely for research purposes.</p>
-        <p>If you agree to participate in this study, please click the "I Agree" button below. By clicking this button, you acknowledge that you have read and understood this consent form, and agree to participate in the research.</p>
+        <h1 class="consent-header">Consent Form</h1>
+
+        <p>Welcome to this experiment. Pending your consent below, you will participate in a short study on human reasoning in a simple computer game.</p>
+
+        <p>By playing the game and answering some follow up questions, you are participating in a study being performed by cognitive scientists in the MIT Department of Brain and Cognitive Sciences. If you have questions about this research, please contact Matthias Hofer at mhofer@mit.edu.</p>
+            
+        <p>Your participation in this research is voluntary. You may decline to answer any or all of the following questions. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal identifying inforrmation about you.</p>
+
+        <p>If you agree to participate in this study, please click the "I Agree" button below.</p>
+        
         <!-- Agreement Button -->
         <form action="{{ url_for('render_page', page_name='instructions') }}?{{ query_string }}">
             <button type="submit" class="btn btn-primary">I Agree</button>

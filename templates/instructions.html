@@ -35,19 +35,25 @@
     {% include 'progress_bar.html' %}
 
     <div class="container instructions-container">
-        <h3 class="header">Experiment instructions</h3>
+        <h3 class="header">Instructions</h3>
         
         <p>In this study, you will engage with game boards from the well-known computer game Minesweeper. The goal of Minesweeper is to clear a rectangular board containing hidden "mines" without detonating any of them. The game is played by revealing squares of the grid by clicking on them. If a square containing a mine is revealed, the game is over. If not, a digit is displayed in the square, indicating how many mines are adjacent to it. This helps the player deduce the positions of mines.</p>
 
-        <p>The boards you will encounter look like the following example:</p>
-        <div class="img-container">
+        <p>During this experiment, one of the squares will be indicated with a question mark, like in the following example:</p> 
+                <div class="img-container">
             <!-- Replace 'minesweeper-board.jpg' with the path to your actual image file -->
-            <img src="{{ url_for('static', filename='img/example-stimulus.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: auto;">
+            <img src="{{ url_for('static', filename='img/example-stimulus.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
         </div>
 
-        <p>During this experiment, one of the squares will be marked with a flag. Your task is to determine whether that square contains a mine. Each puzzle has a unique solution, and you will be presented with 20 problems of varying difficulty. After completing these challenges, we will ask you to provide some basic information. A performance bonus will be awarded based on the number of correctly solved puzzles.</p>
-
-        <!-- Start Experiment Button -->
+        <p>Your task is to determine whether that square contains a mine or not. Unlike the classical game, you will not be able to click on squares to reveal them. But to assist you in your reasoning, you will be able to:</p> 
+        
+        <ul>
+            <li>Place flags on squares you suspect to be mines (right-click).</li>
+            <li>Mark squares as safe if you believe they're free of mines (left-click).</li>
+        </ul>
+        
+        <p>Each puzzle has a unique solution, and you will be presented with 20 problems of varying difficulty. After completing these challenges, we will ask you to provide some basic information. A performance bonus of ${{ "%.2f"|format(bonus_amount) }} will be awarded based on the number of correctly solved puzzles.</p>
+    
         <form action="{{ url_for('experiment') }}?{{ query_string }}">
             <button type="submit" class="btn btn-primary start-button">Start Experiment</button>
         </form>

@@ -1,5 +1,5 @@
 from flask import render_template, jsonify, request, g, session, redirect, url_for
-from app import app
+from app import app, BONUS_AMOUNT
 from database import save_trial_data
 from game_logic import Game
 from game_solver import Solver
@@ -23,8 +23,17 @@ def index():
 @app.route('/<page_name>')
 def render_page(page_name):
     valid_pages = ['consent', 'instructions', 'questionnaire']
+    
+    # Context data for specific pages
+    page_contexts = {
+        'instructions': {'bonus_amount': BONUS_AMOUNT},
+        # Add other pages and their contexts as needed
+    }
+    
     if page_name in valid_pages:
-        return render_template(f'{page_name}.html')
+        # Get the context for the page, default to an empty dict if not found
+        context = page_contexts.get(page_name, {})
+        return render_template(f'{page_name}.html', **context)
     else:
         return "Page not found", 404
 
@@ -132,6 +141,7 @@ def get_stimulus():
                    progress_percent=(trial_id / len(stimuli)) * 100
                    )
 
+
 @app.route('/game', methods=['GET', 'POST'])
 def game():
     # Initialize game with settings
@@ -169,6 +179,14 @@ def move():
     session['user_actions'] = user_actions
 
     return jsonify({'result': result, 'game_state': new_game_state})
+
+
+@app.route('/calculate_bonus')
+def calculate_bonus():
+    correct_solutions = 10
+    # correct_solutions = get_number_of_correct_solutions()  # Your function to get the number of correct solutions
+    total_bonus = BONUS_AMOUNT * correct_solutions
+    # Handle the response or further processing
 
 
 @app.route('/send_response', methods=['POST'])
