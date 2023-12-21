@@ -6,6 +6,10 @@
     <title>Experiment Consent</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- custom styles -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+
     <style>
         .consent-wrapper-class {
             max-width: 600px;
@@ -26,7 +30,7 @@
         <p>All data collected in this study will be kept anonymous and used solely for research purposes.</p>
         <p>If you agree to participate in this study, please click the "I Agree" button below. By clicking this button, you acknowledge that you have read and understood this consent form, and agree to participate in the research.</p>
         <!-- Agreement Button -->
-        <form action="{{ url_for('instructions') }}?{{ query_string }}">
+        <form action="{{ url_for('render_page', page_name='instructions') }}?{{ query_string }}">
             <button type="submit" class="btn btn-primary">I Agree</button>
         </form>
     </div>

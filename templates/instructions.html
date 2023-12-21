@@ -6,6 +6,10 @@
     <title>Experiment Instructions</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- custom styles -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    
     <style>
         .instructions-container {
             max-width: 700px;
@@ -27,6 +31,9 @@
     </style>
 </head>
 <body>
+    <!-- Include Progress Bar -->
+    {% include 'progress_bar.html' %}
+
     <div class="container instructions-container">
         <h3 class="header">Experiment instructions</h3>
         

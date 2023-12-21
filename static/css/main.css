@@ -1,3 +1,8 @@
+body {
+    margin: 0px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
 .contents-wrapper {
     display: flex;
     flex-direction: column; /* Stack children vertically */
@@ -5,6 +10,53 @@
     text-align: center; /* Center text for all children */
 }
 
+/* Progress Bar Styles */
+.progress-bar-container {
+    background-color: rgb(233, 233, 233);
+    border-top: 1px solid #c4c4c4;
+    border-bottom: 1px solid #c4c4c4;
+    width: 100%;
+    height: 38px;
+    position: relative;
+}
+
+.progress-bar-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.progress-text {
+    /* flex-grow: 1; */
+    text-align: left;
+    margin-right: 15px;
+    font-size: 14px;
+    color: rgb(115, 115, 115);
+}
+
+.progress-text p {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.progress-bar-area {
+    flex-grow: 1;
+    position: relative;
+    height: 12px;
+    background-color: #d4d4d4; /* Light grey background for the progress area */
+    border-top: 1px solid #bcbcbc;
+    border-right: 1px solid #bcbcbc;
+}
+
+.progress-bar {
+    background-color: darkgrey;
+    height: 12px;
+    width: 0%; /* Start with 0% and increase dynamically */
+    position: absolute;
+    left: 0;
+}
 
 /* styles for the minesweeper game board */
 .game-board-container {
@@ -174,7 +226,7 @@
     color: #333; /* Adjust the color as needed */
 }
 
-button {
+.contents-wrapper button {
     background-color: grey; /* Grey background */
     color: white; /* White text */
     padding: 10px 20px; /* Larger size with some padding */
@@ -186,6 +238,6 @@ button {
     transition: background-color 0.3s; /* Smooth transition for hover effect */
 }
 
-button:hover {
+.contents-wrapper button:hover {
     background-color: #505050; /* Slightly darker grey on hover */
 }

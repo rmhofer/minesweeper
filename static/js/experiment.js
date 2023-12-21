@@ -11,6 +11,10 @@ function startTrial() {
         let isSolvedStateShown = false;
         let probePosition = null, minePresent = false;
         
+        // advance the progress bar
+        let progressPercent = data.progress_percent
+        document.getElementById('progress-bar').style.width = progressPercent + '%';
+
         // render the game board and game state
         renderGameBoard(gameState, interactionMode);
         renderGameState(gameState);

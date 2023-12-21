@@ -18,7 +18,7 @@ def inject_query_string():
 @app.route('/')
 def index():
     query_string = request.query_string.decode('utf-8')
-    return redirect(url_for('consent') + '?' + query_string)
+    return redirect(url_for('render_page', page_name='consent') + '?' + query_string)
 
 @app.route('/<page_name>')
 def render_page(page_name):
@@ -129,8 +129,8 @@ def get_stimulus():
                    game_state_solved=game_state_solved, 
                    game_board=game_board, 
                    interaction_mode='exploratory',  # Possible values: 'disabled', 'standard', 'exploratory'
+                   progress_percent=(trial_id / len(stimuli)) * 100
                    )
-
 
 @app.route('/game', methods=['GET', 'POST'])
 def game():
