@@ -4,7 +4,7 @@ This repository contains a simple implementation of the classic game Minesweeper
 
 ![Minesweeper Game](static/img/gameplay-1.png)
 
-### Prerequisites
+## Prerequisites
 
 - Flask
 
@@ -15,20 +15,20 @@ pip install flask
 ```
 
 ## Running the Application
+
 Once Flask is installed, you can start the server by running app.py.
 
 ```bash
 python app.py
 ```
 
-To play an open ended game visit http://127.0.0.1:5000/game.
+To play an open ended game visit <http://127.0.0.1:5000/game>.
 
 ## Reasoning experiment
 
-To access the reasoning experiment go to http://127.0.0.1:5000/experiment.
+To access the reasoning experiment go to <http://127.0.0.1:5000/experiment>.
 
 ![Experiment](static/img/gameplay-2.png)
-
 
 ## Solver
 
@@ -36,21 +36,22 @@ The file game_solver.py contains a 'naive' deduction-based solver that deduces t
 
 ![Solver](static/img/gameplay-3.png)
 
-
 ### Game representation
 
 JSON Data Structure
 
-    Game Board (game_board): An NxM array where each element is an integer
-    - -1 represents a mine.
-    - 0 to 8 represent the number of adjacent mines.
+Game Board (game_board): An NxM array where each element is an integer
 
-    Game States (game_states): An array where each element is an object containing a game_state and a move.
+- -1 represents a mine.
+- 0 to 8 represent the number of adjacent mines.
 
-    game_state (this is the information that players have access to) is an NxM array similar to game_board, but with:
-    - 0 to 8 for uncovered squares.
-    - -1 for unseen squares.
-    - -2 for flagged squares.
-    - -3 for squares that have been revealed to contain a bomb (this implies that the game has ended)
+Game States (game_states): An array where each element is an object containing a game_state and a move.
 
-    move is an object with x, y, and action: x and y are the coordinates of the move. Action is either 0 (uncover) or 1 (flag).
+game_state (this is the information that players have access to) is an NxM array similar to game_board, but with:
+
+- 0 to 8 for uncovered squares.
+- -1 for unseen squares.
+- -2 for flagged squares.
+- -3 for squares that have been revealed to contain a bomb (this implies that the game has ended)
+
+move is an object with x, y, and action: x and y are the coordinates of the move. Action is either 0 (uncover) or 1 (flag).
