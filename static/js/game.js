@@ -16,6 +16,8 @@ function toggleMarkSafe(x, y) {
 
 function processUserInteraction(x, y, action) {
     // interact with the game to perform the corresponding action
+    if (!isTrialActive) return;
+    
     $.ajax({
         url: '/move',
         type: 'POST',

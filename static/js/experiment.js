@@ -1,5 +1,8 @@
 function startTrial() {
 
+    // set the trial to active
+    isTrialActive = true;
+
     $.getJSON('/get_stimulus', function(data) {
         // Start the reaction time timer
         const startTime = Date.now();
@@ -38,6 +41,9 @@ function startTrial() {
                 // Unbind the keypress event to prevent further responses in this trial
                 $(document).off('keypress');
                 
+                // set the trial to inactive
+                isTrialActive = false;
+
                 let userResponse = e.key.toUpperCase() === 'P';
                 let responseCorrect = minePresent === userResponse;
                 
@@ -105,6 +111,9 @@ function startTrial() {
         document.getElementById('toggleSolveButton')?.addEventListener('click', toggleSolve);
     });
 }
+
+// Declare isTrialActive in the global scope
+let isTrialActive = true;
 
 $(document).ready(function() {
     // automatically load the first stimulus when the page is loaded
