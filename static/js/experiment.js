@@ -15,7 +15,9 @@ function startTrial() {
         let probePosition = null, minePresent = false;
         
         // advance the progress bar
-        let progressPercent = data.progress_percent
+        let trialID = data.trial_id
+        let numStimuli = data.num_stimuli
+        let progressPercent = (trialID / numStimuli) * 100
         document.getElementById('progress-bar').style.width = progressPercent + '%';
 
         // render the game board and game state
@@ -83,14 +85,24 @@ function startTrial() {
                 });
 
                 // start the next trial (TODO: or end experiment when no more trials)
+                
+                progressPercent == 100
+
                 $.ajax({
                     url: '/send_response',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(trial_data),
                     success: function(response) {
-                        // console.log(response);
-                        setTimeout(startTrial, 1000); // Inter-Stimulus Interval (ISI)
+                        setTimeout(function() {
+                            if (numStimuli - trialID == 1) {
+                                // Experiment is complete, redirect to the experiment completion route
+                                window.location.href = '/exit-survey';
+                            } else {
+                                // Start the next trial after a delay
+                                startTrial(); // Inter-Stimulus Interval (ISI)
+                            }
+                        }, 1000); // Delay set to 1000 milliseconds
                     },
                     dataType: 'json'
                 });

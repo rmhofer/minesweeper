@@ -5,7 +5,7 @@
             <p>Completion Progress</p>
         </div>
         <div class="progress-bar-area">
-            <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
+            <div id="progress-bar" class="progress-bar" style="width: {{ process_percent|default(0) }}%;"></div>
         </div>
     </div>
 </div>

@@ -57,3 +57,8 @@ def save_trial_data(prolific_id, trial_data):
     except Exception as e:
         # Handle any other error
         print(f"Error: {e}")
+        
+        
+def save_exit_data(form_data):
+    # TODO: Implement the logic to save data to the database
+    pass

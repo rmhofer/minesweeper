@@ -1,6 +1,6 @@
 from flask import render_template, jsonify, request, g, session, redirect, url_for
 from app import app, BONUS_AMOUNT
-from database import save_trial_data
+from database import save_trial_data, save_exit_data
 from game_logic import Game
 from game_solver import Solver
 import os
@@ -15,6 +15,12 @@ def inject_query_string():
     g.query_string = request.query_string.decode('utf-8')
     return dict(query_string=g.query_string)
 
+# @app.before_request
+# def clear_session_on_reload():
+#     # Check if the request is a page load (GET request)
+#     if request.method == 'GET':
+#         session.clear()
+
 @app.route('/')
 def index():
     query_string = request.query_string.decode('utf-8')
@@ -22,11 +28,12 @@ def index():
 
 @app.route('/<page_name>')
 def render_page(page_name):
-    valid_pages = ['consent', 'instructions', 'questionnaire']
+    valid_pages = ['consent', 'instructions', 'exit-survey']
     
     # Context data for specific pages
     page_contexts = {
         'instructions': {'bonus_amount': BONUS_AMOUNT},
+        'exit-survey': {'bonus_amount': session.get('bonus', 0), 'process_percent' : 100},
         # Add other pages and their contexts as needed
     }
     
@@ -57,7 +64,7 @@ def experiment():
         stimuli = None
     
     # TODO: try to avoid storing this information in a session variable
-    session['stimuli'] = stimuli
+    session['stimuli'] = stimuli[:5]
 
     # initialize other experiment variables
     session['trial_id'] = 0
@@ -70,15 +77,6 @@ def experiment():
 
     # render the experiment template
     return render_template('experiment.html')
-
-
-@app.route('/submit_questionnaire', methods=['POST'])
-def submit_questionnaire():
-    # Process the form data and save it
-    questionnaire_data = request.form
-    # You can use your existing database functions or something similar to save the data
-    # save_questionnaire_data(questionnaire_data)
-    return render_template('thank_you.html')  # Redirect to a thank-you page
 
 
 @app.route('/get_stimulus', methods=['GET'])
@@ -138,7 +136,8 @@ def get_stimulus():
                    game_state_solved=game_state_solved, 
                    game_board=game_board, 
                    interaction_mode='exploratory',  # Possible values: 'disabled', 'standard', 'exploratory'
-                   progress_percent=(trial_id / len(stimuli)) * 100
+                   trial_id=trial_id,
+                   num_stimuli=len(stimuli)
                    )
 
 
@@ -177,16 +176,7 @@ def move():
     user_actions = session.get('user_actions')
     user_actions.append((x, y, action))
     session['user_actions'] = user_actions
-
     return jsonify({'result': result, 'game_state': new_game_state})
-
-
-@app.route('/calculate_bonus')
-def calculate_bonus():
-    correct_solutions = 10
-    # correct_solutions = get_number_of_correct_solutions()  # Your function to get the number of correct solutions
-    total_bonus = BONUS_AMOUNT * correct_solutions
-    # Handle the response or further processing
 
 
 @app.route('/send_response', methods=['POST'])
@@ -197,6 +187,14 @@ def send_response():
     user_actions = session.get('user_actions')
     trial_data['user_actions'] = user_actions
     
+    # update bonus
+    bonus = session.get('bonus', 0) # Default to 0 if 'bonus' is not in session
+    print(trial_data['response_correct'])
+    bonus += trial_data['response_correct'] * BONUS_AMOUNT
+    print(bonus)
+    session['bonus'] = bonus
+    
+    # save bonus
     try:
         save_trial_data(prolific_id, trial_data)
     except Exception as e:
@@ -204,3 +202,15 @@ def send_response():
         return jsonify(success=False, message="Failed to save trial data.")
     
     return jsonify(success=True)
+
+
+@app.route('/submit_exit_survey', methods=['POST'])
+def exit_survey_response():
+    # Extract form data
+    form_data = request.form
+
+    # Call function to save data to the database
+    save_exit_data(form_data)
+
+    # Redirect to Prolific completion URL upon successful data saving
+    return redirect('PROLIFIC_COMPLETION_URL')

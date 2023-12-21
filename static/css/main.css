@@ -71,16 +71,18 @@ body {
 }
 
 .game-board-container td {
-    width: 25px;  /* Adjust the width as needed */
-    height: 25px; /* Adjust the height as needed */
+    width: 30px;  /* Adjust the width as needed */
+    height: 30px; /* Adjust the height as needed */
     border: 3px solid darkgrey;
     text-align: center;
     vertical-align: middle;
     background-color: rgb(189, 189, 189);
     font-weight: bold;
-    font-size: 22px;
+    font-size: 25px;
     background-position: center;
     background-repeat: no-repeat;
+    cursor: default; /* or 'pointer' */
+    user-select: none;
 }
 
 .minesweeper-unrevealed-square {
@@ -123,15 +125,21 @@ body {
 
 .game-board-container td.mine, .background-image-mine { 
     background-image: url('/static/img/mine.png');
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .game-board-container td.flag, .background-image-flag { 
     background-image: url('/static/img/flag.png');
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .game-board-container td.safe, .background-image-safe { 
     /* color: black !important;  */
     background-image: url('/static/img/safe.png');
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .game-board-container td.red-background { 
