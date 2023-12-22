@@ -1,4 +1,4 @@
-function startTrial() {
+function doTrial() {
 
     // set the trial to active
     isTrialActive = true;
@@ -97,10 +97,10 @@ function startTrial() {
                         setTimeout(function() {
                             if (numStimuli - trialID == 1) {
                                 // Experiment is complete, redirect to the experiment completion route
-                                window.location.href = '/exit-survey';
+                                window.location.href = '/exit_survey';
                             } else {
                                 // Start the next trial after a delay
-                                startTrial(); // Inter-Stimulus Interval (ISI)
+                                doTrial(); // Inter-Stimulus Interval (ISI)
                             }
                         }, 1000); // Delay set to 1000 milliseconds
                     },
@@ -129,5 +129,5 @@ let isTrialActive = true;
 
 $(document).ready(function() {
     // automatically load the first stimulus when the page is loaded
-    startTrial();
+    doTrial();
 });

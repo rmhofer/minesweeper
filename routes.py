@@ -28,12 +28,12 @@ def index():
 
 @app.route('/<page_name>')
 def render_page(page_name):
-    valid_pages = ['consent', 'instructions', 'exit-survey']
+    valid_pages = ['consent', 'instructions', 'exit_survey']
     
     # Context data for specific pages
     page_contexts = {
         'instructions': {'bonus_amount': BONUS_AMOUNT},
-        'exit-survey': {'bonus_amount': session.get('bonus', 0), 'process_percent' : 100},
+        'exit_survey': {'bonus_amount': session.get('bonus', 0), 'process_percent' : 100},
         # Add other pages and their contexts as needed
     }
     
@@ -205,7 +205,7 @@ def send_response():
 
 
 @app.route('/submit_exit_survey', methods=['POST'])
-def exit_survey_response():
+def submit_exit_survey():
     # Extract form data
     form_data = request.form
 
