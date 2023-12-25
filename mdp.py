@@ -84,6 +84,33 @@ class MineSweeper:
             if state[i, j] == self.unknown:
                 yield i, j, new_val
 
+    def linear_equations(self, state, cells):
+        unknowns = {}  # cell -> column index
+        A = np.zeros((len(cells), len(cells) * 8))
+        b = np.zeros(len(cells))
+
+        n_unknowns = 0
+        for idx, (x, y) in enumerate(cells):
+            count = self.board[x, y]
+            for i, j in it.product((x - 1, x, x + 1), (y - 1, y, y + 1)):
+                if (i, j) == (x, y):
+                    continue
+                if i < 0 or i >= self.H or j < 0 or j >= self.W:
+                    continue
+
+                if state[i, j] == self.unknown:
+                    unknown_idx = unknowns.setdefault((i, j), n_unknowns)
+                    A[idx, unknown_idx] = 1
+                    n_unknowns += 1 if unknown_idx == n_unknowns else 0
+
+                if state[i, j] == self.proved_mine:
+                    count -= 1
+
+            b[idx] = count
+
+        A = A[:, :n_unknowns]
+        return A, b, unknowns
+
     def solve_multiple(self, state, cells):
         unknowns = {}
         A = np.zeros((len(cells), len(cells) * 8))
@@ -117,10 +144,68 @@ class MineSweeper:
             if np.isclose(x[unknown_idx], 1):
                 yield i, j, self.proved_mine.value
 
+    def solve_multiple_bp(self, state, cells):
+        import cvxopt
+
+        A, b, unknowns = self.linear_equations(state, cells)
+
+        n = A.shape[1]
+
+        c = cvxopt.matrix(np.ones(n))
+        G = cvxopt.matrix(np.concatenate([np.eye(n), -np.eye(n)]))
+        h = cvxopt.matrix(np.concatenate([np.ones(n), np.zeros(n)]))
+        sol = cvxopt.solvers.lp(c, G, h, cvxopt.matrix(A), cvxopt.matrix(b))
+        x = sol["x"]
+
+        for (i, j), unknown_idx in unknowns.items():
+            if np.isclose(x[unknown_idx], 0):
+                yield i, j, self.proved_clear.value
+            if np.isclose(x[unknown_idx], 1):
+                yield i, j, self.proved_mine.value
+
+    def solve_multiple_rref(self, state, cells):
+        from scipy.linalg import lu
+
+        A, b, unknowns = self.linear_equations(state, cells)
+        # print("A, b", A, b)
+
+        *_, U = lu(np.concatenate([A, b[:, None]], axis=1))
+        # print("U", U)
+
+        proved = np.ones(A.shape[1]) * self.unknown.value
+        j = A.shape[1]
+        for i, row in reversed(list(enumerate(U[:, :-1]))):
+            # print("original row", row)
+            target = U[i, -1] - (0 if j == A.shape[1] else proved[j:] @ row[j:])
+            row = row[:j]
+            ub = (row > 0).sum()
+            lb = (row < 0).sum()
+            # print("new row", row)
+            # print("original", U[i, -1], "adjusted", target)
+
+            if ub == target:
+                j = np.where(row != 0)[0][0]
+                for k in np.where(row != 0)[0]:
+                    proved[k] = 1 if row[k] == 1 else 0
+
+            if lb == target:
+                j = np.where(row != 0)[0][0]
+                for k in np.where(row != 0)[0]:
+                    proved[k] = 1 if row[k] == -1 else 0
+
+            # print("proved", proved)
+
+        for (i, j), unknown_idx in unknowns.items():
+            p = proved[unknown_idx]
+            if np.isclose(p, 1):
+                yield i, j, self.proved_mine.value
+            elif np.isclose(p, 0):
+                yield i, j, self.proved_clear.value
+
     def p_mine(self, s, x, y):
-        if s[x, y] == 1:
+        if s[x, y] == self.proved_mine:
             return 1.0
-        elif s[x, y] == 0:
+        elif s[x, y] == self.proved_clear:
             return 0.0
 
         return (self.n_mines - (s == self.proved_mine).sum()) / (
@@ -135,7 +220,7 @@ class MineSweeper:
 
         solver = self.solve_one
         if len(a) > 1:
-            solver = self.solve_multiple
+            solver = self.solve_multiple_rref
 
         snew = s.copy()
         for move in solver(s, a):
@@ -152,7 +237,9 @@ class MineSweeper:
 
         while len(stack) > 0:
             s = stack.pop()
+            print(s)
             for a in range(2, len(self.actions)):
+                print("trying ", self.actions[a])
                 snew, _, _, done = self.tr(s, self.actions[a])
                 if self.hash(snew[0]) not in names:
                     names.add(self.hash(snew[0]))
@@ -160,6 +247,11 @@ class MineSweeper:
                     states.append(snew[0])
 
         return states
+
+    def board_to_state(self, board):
+        s = np.array(board).copy()
+        s[s != -1] = self.given.value
+        return s
 
     def hash(self, s):
         return str(s)
@@ -214,7 +306,6 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
     for _ in range(max_iter):
         bp()
         s = root
-        # selection
         done = False
         history = []
 
@@ -243,7 +334,7 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
         i = 0
 
         while not done and i < max_depth:
-            # a = random.choice(range(len(mdp.actions)))
+            a = random.choice(range(len(mdp.actions)))
             ns, ps, reward, done = mdp.tr(s, mdp.actions[a])
             G += (mdp.discount**i) * reward
 
@@ -297,6 +388,43 @@ def vi(mdp, states, rtol=1e-3):
     return Q, V
 
 
+class Node:
+    def __init__(self, state, value):
+        self.state = state
+        self.children = {}
+        self.data = {}
+        self.value = value
+
+
+def tree(mdp, s, Q, V):
+    root = Node(s, V[mdp.hash(s)])
+    stack = [root]
+    nodes = {mdp.hash(root.state): root}
+    while stack:
+        node = stack.pop()
+        m = Q[mdp.hash(node.state)].max()
+        for i, a in enumerate(mdp.actions):
+            if Q[mdp.hash(node.state)][i] < m:
+                continue
+
+            snew, _, r, done = mdp.tr(node.state, a)
+            snew = snew[0]
+            if done:
+                continue
+
+            if mdp.hash(snew) in nodes:
+                child = nodes[mdp.hash(snew)]
+            else:
+                child = Node(snew, V[mdp.hash(snew)])
+                nodes[mdp.hash(snew)] = child
+                stack.append(child)
+
+            node.children[i] = child
+            node.data[i] = (a, r)
+
+    return root
+
+
 if __name__ == "__main__":
     # g = Grid(4, 4)
     board = np.array(
@@ -313,6 +441,6 @@ if __name__ == "__main__":
     # m = MineSweeper(board, 1, 4, 2)
     m = MineSweeper(board, 1, 2, 2)
     states = m.traverse(s)
-    Q, V = value_iteration(m, states)
+    Q, V = vi(m, states)
     # Q, N = mcts(m, s, max_iter=500)
     # print(Q[m.hash(s)])
