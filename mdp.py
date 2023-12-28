@@ -3,6 +3,7 @@ import itertools as it
 import random
 
 import numpy as np
+from scipy.linalg import lu
 
 debug = False
 
@@ -10,6 +11,11 @@ debug = False
 def bp():
     if debug:
         breakpoint()
+
+
+def P(*a):
+    if debug:
+        print(*a)
 
 
 class BoardState(IntEnum):
@@ -50,7 +56,7 @@ class MineSweeper:
                 continue
             if board[i, j] <= 0 or board[k, l] <= 0:
                 continue
-            if abs(i - k) + abs(j - l) > 2:
+            if abs(i - k) + abs(j - l) > 3:
                 continue
 
             # action.append(f"2_{i}-{j}_{k}-{l}")
@@ -111,89 +117,91 @@ class MineSweeper:
         A = A[:, :n_unknowns]
         return A, b, unknowns
 
-    def solve_multiple(self, state, cells):
-        unknowns = {}
-        A = np.zeros((len(cells), len(cells) * 8))
-        b = np.zeros(len(cells))
+    # def solve_multiple(self, state, cells):
+    #     unknowns = {}
+    #     A = np.zeros((len(cells), len(cells) * 8))
+    #     b = np.zeros(len(cells))
 
-        n_unknowns = 0
-        for idx, (x, y) in enumerate(cells):
-            count = self.board[x, y]
-            for i, j in it.product((x - 1, x, x + 1), (y - 1, y, y + 1)):
-                if (i, j) == (x, y):
-                    continue
-                if i < 0 or i >= self.H or j < 0 or j >= self.W:
-                    continue
+    #     n_unknowns = 0
+    #     for idx, (x, y) in enumerate(cells):
+    #         count = self.board[x, y]
+    #         for i, j in it.product((x - 1, x, x + 1), (y - 1, y, y + 1)):
+    #             if (i, j) == (x, y):
+    #                 continue
+    #             if i < 0 or i >= self.H or j < 0 or j >= self.W:
+    #                 continue
 
-                if state[i, j] == self.unknown:
-                    unknown_idx = unknowns.setdefault((i, j), n_unknowns)
-                    A[idx, unknown_idx] = 1
-                    n_unknowns += 1 if unknown_idx == n_unknowns else 0
+    #             if state[i, j] == self.unknown:
+    #                 unknown_idx = unknowns.setdefault((i, j), n_unknowns)
+    #                 A[idx, unknown_idx] = 1
+    #                 n_unknowns += 1 if unknown_idx == n_unknowns else 0
 
-                if state[i, j] == self.proved_mine:
-                    count -= 1
+    #             if state[i, j] == self.proved_mine:
+    #                 count -= 1
 
-            b[idx] = count
+    #         b[idx] = count
 
-        A = A[:, :n_unknowns]
+    #     A = A[:, :n_unknowns]
 
-        x = np.linalg.lstsq(A, b, rcond=None)[0]
-        for (i, j), unknown_idx in unknowns.items():
-            if np.isclose(x[unknown_idx], 0):
-                yield i, j, self.proved_clear.value
-            if np.isclose(x[unknown_idx], 1):
-                yield i, j, self.proved_mine.value
+    #     x = np.linalg.lstsq(A, b, rcond=None)[0]
+    #     for (i, j), unknown_idx in unknowns.items():
+    #         if np.isclose(x[unknown_idx], 0):
+    #             yield i, j, self.proved_clear.value
+    #         if np.isclose(x[unknown_idx], 1):
+    #             yield i, j, self.proved_mine.value
 
-    def solve_multiple_bp(self, state, cells):
-        import cvxopt
+    # def solve_multiple_bp(self, state, cells):
+    #     import cvxopt
 
-        A, b, unknowns = self.linear_equations(state, cells)
+    #     A, b, unknowns = self.linear_equations(state, cells)
 
-        n = A.shape[1]
+    #     n = A.shape[1]
 
-        c = cvxopt.matrix(np.ones(n))
-        G = cvxopt.matrix(np.concatenate([np.eye(n), -np.eye(n)]))
-        h = cvxopt.matrix(np.concatenate([np.ones(n), np.zeros(n)]))
-        sol = cvxopt.solvers.lp(c, G, h, cvxopt.matrix(A), cvxopt.matrix(b))
-        x = sol["x"]
+    #     c = cvxopt.matrix(np.ones(n))
+    #     G = cvxopt.matrix(np.concatenate([np.eye(n), -np.eye(n)]))
+    #     h = cvxopt.matrix(np.concatenate([np.ones(n), np.zeros(n)]))
+    #     sol = cvxopt.solvers.lp(c, G, h, cvxopt.matrix(A), cvxopt.matrix(b))
+    #     x = sol["x"]
 
-        for (i, j), unknown_idx in unknowns.items():
-            if np.isclose(x[unknown_idx], 0):
-                yield i, j, self.proved_clear.value
-            if np.isclose(x[unknown_idx], 1):
-                yield i, j, self.proved_mine.value
+    #     for (i, j), unknown_idx in unknowns.items():
+    #         if np.isclose(x[unknown_idx], 0):
+    #             yield i, j, self.proved_clear.value
+    #         if np.isclose(x[unknown_idx], 1):
+    #             yield i, j, self.proved_mine.value
 
     def solve_multiple_rref(self, state, cells):
-        from scipy.linalg import lu
-
         A, b, unknowns = self.linear_equations(state, cells)
-        # print("A, b", A, b)
+        P("A, b", A, b)
 
         *_, U = lu(np.concatenate([A, b[:, None]], axis=1))
-        # print("U", U)
+        P("U", U)
 
         proved = np.ones(A.shape[1]) * self.unknown.value
-        j = A.shape[1]
         for i, row in reversed(list(enumerate(U[:, :-1]))):
-            # print("original row", row)
-            target = U[i, -1] - (0 if j == A.shape[1] else proved[j:] @ row[j:])
-            row = row[:j]
+            orig_row = row.copy()
+            P("original row", row)
+            mask = proved != self.unknown.value
+            target = U[i, -1] - (proved[mask] @ row[mask])
+            row = row[~mask]
             ub = (row > 0).sum()
-            lb = (row < 0).sum()
-            # print("new row", row)
-            # print("original", U[i, -1], "adjusted", target)
+            lb = -(row < 0).sum()
+            P("bounds", ub, lb)
+            P("new row", row)
+            P("target", U[i, -1], "adjusted target", target)
 
             if ub == target:
-                j = np.where(row != 0)[0][0]
-                for k in np.where(row != 0)[0]:
-                    proved[k] = 1 if row[k] == 1 else 0
+                for k in np.where(orig_row != 0)[0]:
+                    if mask[k]:
+                        continue
+                    proved[k] = 1 if orig_row[k] == 1 else 0
 
             if lb == target:
-                j = np.where(row != 0)[0][0]
-                for k in np.where(row != 0)[0]:
-                    proved[k] = 1 if row[k] == -1 else 0
+                for k in np.where(orig_row != 0)[0]:
+                    if mask[k]:
+                        continue
+                    proved[k] = 1 if orig_row[k] == -1 else 0
 
-            # print("proved", proved)
+            P("proved", proved)
 
         for (i, j), unknown_idx in unknowns.items():
             p = proved[unknown_idx]
@@ -237,9 +245,9 @@ class MineSweeper:
 
         while len(stack) > 0:
             s = stack.pop()
-            print(s)
+            P(s)
             for a in range(2, len(self.actions)):
-                print("trying ", self.actions[a])
+                P("trying ", self.actions[a])
                 snew, _, _, done = self.tr(s, self.actions[a])
                 if self.hash(snew[0]) not in names:
                     names.add(self.hash(snew[0]))
@@ -304,7 +312,6 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
             G = reward + mdp.discount * G
 
     for _ in range(max_iter):
-        bp()
         s = root
         done = False
         history = []
@@ -321,7 +328,6 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
 
             s = random.choices(ns, ps)[0]
 
-        bp()
         if done:
             backup(history, Q, N, 0)
             continue
@@ -343,8 +349,6 @@ def mcts(mdp, root, max_iter=10, max_depth=10):
 
             s = random.choice(ns)
             i += 1
-
-        bp()
 
         s, a, reward = history.pop(-1)
         Q[mdp.hash(s)][a] = G
