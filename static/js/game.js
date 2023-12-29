@@ -15,9 +15,12 @@ function toggleMarkSafe(x, y) {
 }
 
 function processUserInteraction(x, y, action) {
-    // interact with the game to perform the corresponding action
-    if (!isTrialActive) return;
-    
+    // return if in experiment mode and if the trial is not active
+    if (typeof isTrialActive !== 'undefined' && !isTrialActive) {
+        // Return if isTrialActive is defined and false
+        return;
+    }
+
     $.ajax({
         url: '/move',
         type: 'POST',
@@ -117,11 +120,12 @@ function renderGameState(gameState, move=null) {
 document.addEventListener('DOMContentLoaded', function() {
     // Check if the 'gameState' element exists
     var gameStateElement = document.getElementById('gameState');
+    var interactionMode = 'standard';
     
     if (gameStateElement) {
         // Convert the initial game state from Flask to a JavaScript array
         gameState = JSON.parse(gameStateElement.textContent);
-        renderGameBoard(gameState, true);
+        renderGameBoard(gameState, interactionMode);
         renderGameState(gameState);
     }
 });

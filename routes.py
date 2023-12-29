@@ -148,6 +148,9 @@ def game():
                 width=request.form.get('width', 10, type=int), 
                 num_mines=request.form.get('mines', 12, type=int))
 
+    # re-initialize session variable to store user actions
+    session['user_actions'] = []
+    
     # serialize and store in session variable
     session['game'] = game.serialize()
     return render_template('game.html', 
