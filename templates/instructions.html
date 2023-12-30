@@ -37,25 +37,45 @@
     <div class="container instructions-container">
         <h3 class="header">Instructions</h3>
         
-        <p>In this study, you will engage with game boards from the well-known computer game Minesweeper. The goal of Minesweeper is to clear a rectangular board containing hidden "mines" without detonating any of them. The game is played by revealing squares of the grid by clicking on them. If a square containing a mine is revealed, the game is over. If not, a digit is displayed in the square, indicating how many mines are adjacent to it. This helps the player deduce the positions of mines.</p>
+        <p>In this study, you will engage with game boards from the well-known computer game Minesweeper. The goal of Minesweeper is to clear a rectangular board containing hidden "mines" without detonating any of them. In this study, boards will always be 5x5 and contain 6 mines total. Some squares have <b>numbers</b> which indicate the number of adjacent squares that contain mines. For instance, below is an example game board with all the mines revealed: </p>
 
-        <p>During this experiment, one of the squares will be indicated with a question mark, like in the following example:</p> 
-                <div class="img-container">
-            <!-- Replace 'minesweeper-board.jpg' with the path to your actual image file -->
-            <img src="{{ url_for('static', filename='img/example-stimulus.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
+        <div class="img-container">
+            <img src="{{ url_for('static', filename='img/example_revealed.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
         </div>
 
-        <p>Your task is to determine whether that square contains a mine or not. Unlike the classical game, you will not be able to click on squares to reveal them. But to assist you in your reasoning, you will be able to:</p> 
+        <p>
+            In the board above, you can see that each number corresponds to the number of surrounding mines. For instance, the cell with a "4" has 4 adjacent squares with mines, shown in the arrows below:
+        </p>
+        <div class="img-container">
+            <img src="{{ url_for('static', filename='img/example_revealed_explained.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
+        </div>
+
+        <p> In the boards you see, however, you will not see where the mines are. Instead, it is your job to <b>deduce which squares have mines</b> from the available information. On each trial you will be shown a board and asked to figure out whether a particular square, marked with a "?", contains a mine. For instance, you might be shown the board below, which has a probe square marked with a "?":        </p>
+
+        <div class="img-container">
+            <img src="{{ url_for('static', filename='img/example_start.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
+        </div>
+
+        <p>Unlike in the classical game of Minesweeper, <b>you will not be able to click on squares to reveal them</b>. But to assist you in your reasoning, you will be able to:</p> 
         
         <ul>
             <li>Place flags on squares you suspect to be mines (right-click).</li>
             <li>Mark squares as safe if you believe they're free of mines (left-click).</li>
         </ul>
+
+        <p> For instance, to assist in figuring out the solution to the board above, you might flag and mark squares as safe so that the board looks like this:
+
+        <div class="img-container">
+            <img src="{{ url_for('static', filename='img/example_flagged_safe.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
+        </div>
         
-        <p>Each puzzle has a unique solution, and you will be presented with 20 problems of varying difficulty. After completing these challenges, we will ask you to provide some basic information. A performance bonus of ${{ "%.2f"|format(bonus_amount) }} will be awarded based on the number of correctly solved puzzles.</p>
+        <p>You will be presented with 20 problems of varying difficulty. Each of them has a unique solution. After completing these challenges, we will ask you to provide some basic information.</p>
+        <p>A performance bonus of ${{ "%.2f"|format(bonus_amount) }} will be awarded for each puzzle solved correctly.</p>
+
+
     
-        <form action="{{ url_for('experiment') }}?{{ query_string }}">
-            <button type="submit" class="btn btn-primary start-button">Start Experiment</button>
+        <form action="{{ url_for('experiment_quiz') }}?{{ query_string }}">
+            <button type="submit" class="btn btn-primary start-button">Take Quiz</button>
         </form>
     </div>
     <!-- Bootstrap JS and dependencies -->

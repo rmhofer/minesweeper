@@ -28,7 +28,7 @@ def index():
 
 @app.route('/<page_name>')
 def render_page(page_name):
-    valid_pages = ['consent', 'instructions', 'exit_survey']
+    valid_pages = ['consent', 'instructions', 'experiment_quiz', 'exit_survey']
     
     # Context data for specific pages
     page_contexts = {
@@ -43,6 +43,13 @@ def render_page(page_name):
         return render_template(f'{page_name}.html', **context)
     else:
         return "Page not found", 404
+
+
+@app.route('/experiment_quiz')
+def experiment_quiz():
+    # Add logic to render the quiz page or handle any specific data
+    return render_template('experiment_quiz.html')  # Assuming the quiz HTML file is named 'experiment_quiz.html'
+
 
 @app.route('/experiment')
 def experiment():
