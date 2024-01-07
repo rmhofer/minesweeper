@@ -11,22 +11,33 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
     
     <style>
-        .instructions-container {
-            max-width: 700px;
-            margin: auto;
-            padding: 20px;
-        }
-        .header {
-            margin-bottom: 20px;
-        }
         .img-container {
             text-align: center;
             margin: 20px 0;
         }
-        .start-button {
-            display: block;
+        .form-container {
+            margin: auto;
+        }
+        .form-check {
+            background-color: #f8f9fa;
             padding: 10px;
-            margin-top: 30px;
+            margin-bottom: 10px; /* Vertical spacing between items */
+            border-radius: 5px; /* Optional: Rounded corners */
+            display: flex; /* Align items in a row */
+            align-items: center; /* Vertical alignment */
+        }
+        .form-check-input {
+            width: 20px; /* Larger checkbox */
+            height: 20px; /* Larger checkbox */
+            margin-top: 0;
+            vertical-align: middle;
+            margin-right: 10px; /* Space between checkbox and label */
+            position: relative; /* Position relative to its normal position */
+            left: 18px;
+        }
+        .form-check-label {
+            margin-left: 18px; /* Space between checkbox and label */
+            font-size: 1.1em; /* Slightly larger font size */
         }
     </style>
 </head>
@@ -34,8 +45,8 @@
     <!-- Include Progress Bar -->
     {% include 'progress_bar.html' %}
 
-    <div class="container instructions-container">
-        <h3 class="header">Instructions</h3>
+    <div class="container contents-main-wrapper">
+        <h3 class="contents-main-header">Instructions</h3>
         
         <p>In this study, you will engage with game boards from the well-known computer game Minesweeper. The goal of Minesweeper is to clear a rectangular board containing hidden "mines" without detonating any of them. In this study, boards will always be 5x5 and contain 6 mines total. Some squares have <b>numbers</b> which indicate the number of adjacent squares that contain mines. For instance, below is an example game board with all the mines revealed: </p>
 
@@ -72,15 +83,86 @@
         <p>You will be presented with 20 problems of varying difficulty. Each of them has a unique solution. After completing these challenges, we will ask you to provide some basic information.</p>
         <p>A performance bonus of ${{ "%.2f"|format(bonus_amount) }} will be awarded for each puzzle solved correctly.</p>
 
+        <hr />
 
-    
-        <form action="{{ url_for('experiment_quiz') }}?{{ query_string }}">
-            <button type="submit" class="btn btn-primary start-button">Take Quiz</button>
-        </form>
+
+        <div class="container mt-4">
+            <h3>Comprehension Quiz</h3>
+            <div class="form-container">
+                <form id="quizForm">
+                    <p>Please answer these brief comprehension questions before beginning the experiment. Check which of the following statements about the game are true:</p>
+        
+                    <!-- Quiz statements will be inserted here by JavaScript -->
+        
+                    <button type="button" class="btn btn-primary mt-3" id="submitQuiz" submit-url="{{ url_for('experiment') }}?{{ query_string }}">Submit Quiz</button>
+                </form>
+            </div>
+        </div>
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var quizStatements = [
+                { id: "Q0", value: "1", text: "The numbers on squares reflect the number of mines next to that square." },
+                { id: "Q1", value: "0", text: "The objective is to find all mines on each board." },
+                { id: "Q2", value: "1", text: "The objective is to find out whether a particular square marked with '?' contains a mine." },
+                { id: "Q3", value: "1", text: "You can use flags and markers to assist in reasoning." },
+                { id: "Q4", value: "0", text: "Some puzzles may have no solution." },
+                { id: "Q5", value: "1", text: "Each board in this experiment contains 6 mines." },
+                { id: "Q6", value: "0", text: "You can ignore squares marked with '?' as they never contain mines." },
+                { id: "Q7", value: "0", text: "There is no bonus for solving the puzzles correctly." }
+                // ... Add other statements here
+            ];
+    
+            // Randomize statements
+            quizStatements.sort(() => Math.random() - 0.5);
+    
+            // Add statements to the form
+            var quizForm = document.getElementById('quizForm');
+            var submitButton = document.getElementById('submitQuiz');
+
+            quizStatements.forEach(function(statement) {
+                var div = document.createElement('div');
+                div.className = 'form-check';
+    
+                var input = document.createElement('input');
+                input.className = 'form-check-input';
+                input.type = 'checkbox';
+                input.id = statement.id;
+                input.value = statement.value;
+    
+                var label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.setAttribute('for', statement.id);
+                label.textContent = statement.text;
+    
+                div.appendChild(input);
+                div.appendChild(label);
+                quizForm.insertBefore(div, submitButton);
+            });
+    
+            // Handle quiz submission
+            document.getElementById('submitQuiz').addEventListener('click', function() {
+                var correct = true;
+                quizStatements.forEach(function(statement) {
+                    var input = document.getElementById(statement.id);
+                    if (input.checked !== Boolean(+statement.value)) {
+                        correct = false;
+                    }
+                });
+    
+                if (!correct) {
+                    alert('Please review your answers. Some are incorrect.');
+                } else {
+                    var experimentUrl = this.getAttribute('submit-url');
+                    window.location.href = experimentUrl;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

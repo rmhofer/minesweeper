@@ -3,6 +3,18 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+.contents-main-wrapper {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    margin-bottom: 100px;
+}
+
+.contents-main-header {
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
 .contents-wrapper {
     display: flex;
     flex-direction: column; /* Stack children vertically */
@@ -21,7 +33,7 @@ body {
 }
 
 .progress-bar-wrapper {
-    max-width: 600px;
+    max-width: 755px;
     margin: 0 auto;
     height: 100%;
     display: flex;
