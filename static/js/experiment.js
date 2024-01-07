@@ -7,6 +7,7 @@ function doTrial() {
         // Start the reaction time timer
         const startTime = Date.now();
 
+        let useTimeoutForAdvance = false; // Set to false to require space bar press
         let gameState = data.game_state;
         let gameBoard = data.game_board;
         let gameStateSolved = data.game_state_solved;
@@ -19,6 +20,10 @@ function doTrial() {
         let numStimuli = data.num_stimuli
         let progressPercent = (trialID / numStimuli) * 100
         document.getElementById('progress-bar').style.width = progressPercent + '%';
+
+        // Show the prompt for the current trial
+        $('#experiment-prompt').show();
+        $('#next-trial-prompt').hide();
 
         // render the game board and game state
         renderGameBoard(gameState, interactionMode);
@@ -39,10 +44,8 @@ function doTrial() {
 
         // define the keypress handler
         function handleKeypress(e) {
-            if (e.key.toUpperCase() === 'Q' || e.key.toUpperCase() === 'P') {
-                // Unbind the keypress event to prevent further responses in this trial
-                $(document).off('keypress');
-                
+            if (isTrialActive && (e.key.toUpperCase() === 'Q' || e.key.toUpperCase() === 'P')) {
+
                 // set the trial to inactive
                 isTrialActive = false;
 
@@ -65,7 +68,6 @@ function doTrial() {
                 };
                 
                 // feedback: update game board representation
-                //  TODO
                 $.each(gameBoard, function(x, row) {
                     $.each(row, function(y, cell) {
                         let cellElement = $(`#cell-${x}-${y}`);
@@ -84,30 +86,47 @@ function doTrial() {
                     });
                 });
 
-                // start the next trial (TODO: or end experiment when no more trials)
-                
-                progressPercent == 100
-
+                // save data and handle trial completion if successful
                 $.ajax({
                     url: '/send_response',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(trial_data),
-                    success: function(response) {
-                        setTimeout(function() {
-                            if (numStimuli - trialID == 1) {
-                                // Experiment is complete, redirect to the experiment completion route
-                                window.location.href = '/exit_survey';
-                            } else {
-                                // Start the next trial after a delay
-                                doTrial(); // Inter-Stimulus Interval (ISI)
-                            }
-                        }, 1000); // Delay set to 1000 milliseconds
-                    },
+                    success: handleTrialCompletion,
                     dataType: 'json'
                 });
             }
         };
+
+        function handleTrialCompletion() {
+            if (useTimeoutForAdvance) {
+                // Automatic advancement after timeout
+                setTimeout(advanceTrialOrEndExperiment, 1000); // 1-second delay
+            } else {
+                // Manual advancement on space bar press
+                $(document).off('keypress').on('keypress', function(event) {
+                    if (event.key === ' ') {
+                        $(document).off('keypress');
+                        advanceTrialOrEndExperiment();
+                    }
+                });
+        
+                // Show the prompt for advancing to the next trial
+                $('#experiment-prompt').hide();
+                $('#next-trial-prompt').show();
+            }
+        }
+
+        function advanceTrialOrEndExperiment() {
+            console.log(numStimuli, trialID);
+            if (numStimuli - trialID === 1) {
+                // Experiment is complete, redirect to the experiment completion route
+                window.location.href = '/survey';
+            } else {
+                // Start the next trial after a delay
+                doTrial();
+            }
+        }
 
         // add event listener to the button with id #toggle
         function toggleSolve() {
@@ -129,5 +148,6 @@ let isTrialActive = true;
 
 $(document).ready(function() {
     // automatically load the first stimulus when the page is loaded
+    // TODO: what if the page is refreshed after the last stimulus?
     doTrial();
 });

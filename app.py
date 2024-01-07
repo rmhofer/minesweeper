@@ -4,8 +4,9 @@ from database import init_db
 app = Flask(__name__)
 app.secret_key = 'secret_key'
 
-# Define the bonus amount
+# Define variables
 BONUS_AMOUNT = 0.05
+PROLIFIC_COMPLETION_URL = ''
 
 # Initialize database
 init_db()

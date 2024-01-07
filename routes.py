@@ -1,5 +1,5 @@
 from flask import render_template, jsonify, request, g, session, redirect, url_for
-from app import app, BONUS_AMOUNT
+from app import app, BONUS_AMOUNT, PROLIFIC_COMPLETION_URL
 from database import save_trial_data, save_exit_data
 from game_logic import Game
 from game_solver import Solver
@@ -12,29 +12,36 @@ import random
 
 @app.context_processor
 def inject_query_string():
+    # make querystring universally available to all routes
     g.query_string = request.query_string.decode('utf-8')
     return dict(query_string=g.query_string)
 
-# @app.before_request
-# def clear_session_on_reload():
-#     # Check if the request is a page load (GET request)
-#     if request.method == 'GET':
-#         session.clear()
+
+@app.route('/clear_session')
+def clear_session():
+    session.clear()  # Clears all data from the session
+    return 'Session cleared!'
+
 
 @app.route('/')
 def index():
+    session.clear()  # Clears all data from the session
     query_string = request.query_string.decode('utf-8')
+    # query_string needs to be attached here because of a redirect
     return redirect(url_for('render_page', page_name='consent') + '?' + query_string)
+
 
 @app.route('/<page_name>')
 def render_page(page_name):
-    valid_pages = ['consent', 'instructions', 'experiment_quiz', 'exit_survey']
+    # generic render function for a list of subpages
+    valid_pages = ['consent', 'instructions', 'survey']
     
     # Context data for specific pages
     page_contexts = {
+        'consent' : {},
         'instructions': {'bonus_amount': BONUS_AMOUNT},
-        'exit_survey': {'bonus_amount': session.get('bonus', 0), 'process_percent' : 100},
-        # Add other pages and their contexts as needed
+        'survey': {'bonus_amount': session.get('bonus', 0), 'process_percent' : 100},
+        # ... add other pages and their contexts as needed
     }
     
     if page_name in valid_pages:
@@ -45,54 +52,53 @@ def render_page(page_name):
         return "Page not found", 404
 
 
-@app.route('/experiment_quiz')
-def experiment_quiz():
-    # Add logic to render the quiz page or handle any specific data
-    return render_template('experiment_quiz.html')  # Assuming the quiz HTML file is named 'experiment_quiz.html'
-
-
 @app.route('/experiment')
 def experiment():
     # Parse information passed as part of the URL
     params = request.args
-    prolific_id = params.get('PID', 'default_id')
-    session['prolific_id'] = prolific_id
-    
-    # debug mode
+    session['prolific_id'] = params.get('PID', 'default_id')
     debug_mode_arg_value = params.get('debug', 'false')
     session['debug'] = debug_mode_arg_value.lower() in ['true', '1', 'yes']
 
-    # reading stimuli from stimuli.json if they exist
-    if os.path.exists('./stimuli/stimuli_5_5_6.json'):
-        with open('./stimuli/stimuli_5_5_6.json', 'r') as file:
-            stimuli = json.load(file)
+    # set up stimuli - retrieve or initialize
+    if 'stimuli' in session:
+        stimuli = session['stimuli']
     else:
-        # Fallback to generating random stimuli
-        stimuli = None
+        # Reading stimuli from stimuli.json if they exist
+        if os.path.exists('./stimuli/stimuli_5_5_6.json'):
+            with open('./stimuli/stimuli_5_5_6.json', 'r') as file:
+                stimuli = json.load(file)
+        else:
+            # Fallback to generating random stimuli
+            stimuli = None
+
+        # Store the loaded stimuli in the session
+        session['stimuli'] = stimuli[:6]  # Assuming you want to store only the first 5
+        
+        # initialize probe types and randomize
+        probe_types = ["naive_easy_probe",
+                       "naive_hard_probe",
+                       "non_naive_probe"] * (len(stimuli)//3)
+        random.shuffle(probe_types)
+        session["probe_types"] = probe_types[:len(stimuli)]
+        
+    # retrieve or initialize other experiment variables
+    session['trial_id'] = session.get('trial_id', 0)
     
-    # TODO: try to avoid storing this information in a session variable
-    session['stimuli'] = stimuli[:5]
-
-    # initialize other experiment variables
-    session['trial_id'] = 0
-    probe_types = ["naive_easy_probe",
-                   "naive_hard_probe",
-                   "non_naive_probe"] * (len(stimuli)//3)
-
-    random.shuffle(probe_types)
-    session["probe_types"] = probe_types[:len(stimuli)]
-
-    # render the experiment template
-    return render_template('experiment.html')
+    # redirect to survey if experiment has already ended
+    if (len(stimuli) == session['trial_id']): 
+        query_string = request.query_string.decode('utf-8')
+        return redirect(url_for('render_page', page_name='survey') + '?' + query_string)
+    else:
+        # render the experiment template
+        return render_template('experiment.html')
 
 
 @app.route('/get_stimulus', methods=['GET'])
 def get_stimulus():
     # get information from session variables
     stimuli = session.get('stimuli')
-    trial_id = session.get('trial_id', 0)
-    probe_types = session.get('probe_types')
-    probe_type = probe_types[trial_id]
+    trial_id = session.get('trial_id')
     probe = None
     
     if stimuli is not None:
@@ -101,6 +107,8 @@ def get_stimulus():
         game_board = np.array(stimuli[trial_id]['game_board'])
         game = Game(game_board=game_board,
              game_states=[{"move":0, "game_state":game_state_unsolved}])
+        probe_types = session.get('probe_types')
+        probe_type = probe_types[trial_id]
         probe = stimuli[trial_id][probe_type]
     else:
         # randomly create a new stimulus
@@ -131,9 +139,6 @@ def get_stimulus():
     # pass game varialbes as lists for rendering
     game_state_unsolved = game.current_game_state.tolist()
     game_board = game.game_board.tolist()
-    
-    # incrementing trial variable
-    session['trial_id'] = trial_id + 1
     
     # re-initialize session variable to store user actions
     session['user_actions'] = []
@@ -192,6 +197,8 @@ def move():
 @app.route('/send_response', methods=['POST'])
 def send_response():
     prolific_id = session.get('prolific_id', 'default_id')
+    
+    # retrieve trial-related data
     trial_data = request.json
     trial_data['trial_id'] = session.get('trial_id', 0)
     user_actions = session.get('user_actions')
@@ -199,9 +206,7 @@ def send_response():
     
     # update bonus
     bonus = session.get('bonus', 0) # Default to 0 if 'bonus' is not in session
-    print(trial_data['response_correct'])
-    bonus += trial_data['response_correct'] * BONUS_AMOUNT
-    print(bonus)
+    bonus += round(trial_data['response_correct'] * BONUS_AMOUNT, 4)
     session['bonus'] = bonus
     
     # save bonus
@@ -211,16 +216,22 @@ def send_response():
         print(f"Error saving trial data: {e}")
         return jsonify(success=False, message="Failed to save trial data.")
     
+    # incrementing trial variable
+    session['trial_id'] = trial_data['trial_id'] + 1
+    
     return jsonify(success=True)
 
 
-@app.route('/submit_exit_survey', methods=['POST'])
-def submit_exit_survey():
+@app.route('/submit_survey', methods=['POST'])
+def submit_survey():
     # Extract form data
     form_data = request.form
 
     # Call function to save data to the database
     save_exit_data(form_data)
 
+    # Clear the session
+    session.clear()
+
     # Redirect to Prolific completion URL upon successful data saving
-    return redirect('PROLIFIC_COMPLETION_URL')
+    return redirect(PROLIFIC_COMPLETION_URL)

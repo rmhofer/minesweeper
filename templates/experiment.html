@@ -10,13 +10,22 @@
     <!-- Include Progress Bar -->
     {% include 'progress_bar.html' %}
 
-    <div class="contents-wrapper">
+    <div class="contents-main-wrapper contents-wrapper">
         
         <!-- create an empty div for the game board -->
         <div id="gameBoardContainer" class="game-board-container"></div>
 
-        <!-- experiment instructions -->
-        <div class="instructions">
+        <!-- Trial instruction prompt -->
+        <div class="instructions" id="experiment-prompt">
+            
+            <div>
+
+            </div>
+            
+            <div>
+
+            </div>
+
             <p class="header">
                 Does the
                 <span class="minesweeper-unrevealed-square probe-location">?</span> 
@@ -37,6 +46,10 @@
             </p>
         </div>
 
+        <!-- Next trial instruction prompt (initially not visible) -->
+        <div class="instructions" id="next-trial-prompt" style="display: none;">
+            <p class="header">Press the space bar to advance to the next trial.</p>
+        </div>
 
         <!-- button to toggle solution provided by the solver -->
         <!-- <div class="toggle-button" style="margin-top: 150px;">
