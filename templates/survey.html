@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exit Survey</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- custom styles -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <style>
+        .form-group {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 10px; /* Vertical spacing between items */
+            border-radius: 5px; /* Rounded corners */
+            display: flex; /* Align items in a row */
+            align-items: center; /* Vertical alignment */
+        }
+        .form-control {
+            width: auto; /* Adjust width as needed */
+            margin-left: 10px; /* Space between label and input */
+        }
+        .form-check-label {
+            margin-left: 18px; /* Space between checkbox and label */
+            font-size: 1.1em; /* Slightly larger font size */
+        }
+        label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Progress Bar -->
+    {% include 'progress_bar.html' %}
+
+    <div class="container contents-main-wrapper">
+        <h3 class="contents-main-header">Thank You for Participating!</h3>
+        <p>Your participation in this study is greatly appreciated. In addition to the base pay, you earned a performance bonus of ${{ "%.2f"|format(bonus_amount) }}.</p>
+        
+        <form action="{{ url_for('submit_survey') }}" method="post" class="mt-4">
+            
+            <!-- Age -->
+            <div class="row form-group">
+                <label for="age" class="col-sm-3 col-form-label">Age</label>
+                <div class="col-sm-9">
+                    <input type="number" class="form-control" id="age" name="age" placeholder="Enter your age">
+                </div>
+            </div>
+    
+            <!-- Gender -->
+            <div class="row form-group">
+                <label for="gender" class="col-sm-3 col-form-label">Gender</label>
+                <div class="col-sm-9">
+                    <select class="form-control" id="gender" name="gender" required>
+                        <option value="">Select...</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="none">Prefer not to say</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Education Level -->
+            <div class="row form-group">
+                <label for="education" class="col-sm-3 col-form-label">Education Level</label>
+                <div class="col-sm-9">
+                    <select class="form-control" id="education" name="education" required>
+                        <option value="">Select...</option>
+                        <option value="high_school">High School</option>
+                        <option value="bachelors">Bachelor's Degree</option>
+                        <option value="masters">Master's Degree</option>
+                        <option value="doctorate">Doctorate</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Minesweeper Experience -->
+            <div class="row form-group">
+                <label for="experience" class="col-sm-3 col-form-label">Minesweeper Experience</label>
+                <div class="col-sm-9">
+                    <select class="form-control" id="experience" name="experience" required>
+                        <option value="">Select...</option>
+                        <option value="0">0 prior games</option>
+                        <option value="1-5">1-5 prior games</option>
+                        <option value="5-50">5-50 prior games</option>
+                        <option value="more-50">More than 50 prior games</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- General feedback -->
+            <div class="row form-group">
+                <label for="feedback" class="col-sm-3 col-form-label">Feedback</label>
+                <div class="col-sm-9">
+                    <textarea style="width: 450px;" class="form-control" id="feedback" name="feedback" rows="4" placeholder="Your feedback about the experiment"></textarea>
+                </div>
+            </div>
+    
+            <!-- Separate row for the button -->
+            <div class="row">
+                <div class="col text-center">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById('surveyForm').onsubmit = function(e) {
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                alert('Please fill out all required fields.');
+            }
+        };
+    </script>
+</body>
+</html>
