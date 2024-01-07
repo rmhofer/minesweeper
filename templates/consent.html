@@ -9,35 +9,32 @@
     
     <!-- custom styles -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
-
-    <style>
-        .consent-wrapper-class {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-        }
-
-        .consent-header {
-            margin-bottom: 20px;
-        }
-    </style>
 </head>
 <body>
-    <div  class="container consent-wrapper-class">
-        <h3 class="consent-header">Consent Form</h3>
+    <div  class="container contents-main-wrapper">
+        <h3 class="contents-main-header">We need your consent to proceed</h3>
 
-        <p>Welcome to this experiment. Pending your consent below, you will participate in a short study on human reasoning in a simple computer game.</p>
+        <p>You have been invited to take part in a research study on human reasoning involving a simple logic game.</p>
 
-        <p>By playing the game and answering some follow up questions, you are participating in a study being performed by cognitive scientists in the MIT Department of Brain and Cognitive Sciences. If you have questions about this research, please contact Matthias Hofer at mhofer@mit.edu.</p>
+        <div style="padding: 35px; background-color: #f8f9fa; border-radius: 5px;">
+            <p>
+            By completing this study, you are participating in a study being performed by cognitive scientists in the MIT Department of Brain and Cognitive Science. The purpose of this research is to understand how people reason and solve problems. 
+            <p>
+            </p>
+            You must be at least 18 years old to participate. There are neither specific benefits nor anticipated risks associated with participation in this study. Your participation in this study is completely voluntary and you can withdraw at any time by simply exiting the study. You may decline to answer any or all of the following questions. Choosing not to participate or withdrawing will result in no penalty. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you, and any information you provide will not be shared in association with any personally identifying information.
+            </p>
+
+            </p>
+            If you have questions about this research, please contact the researchers by sending an email to cheyette@mit.edu. These researchers will do their best to communicate with you in a timely, professional, and courteous manner. If you have questions regarding your rights as a research subject, or if problems arise which you do not feel you can discuss with the researchers, please contact the MIT Institutional Review Board.
+            <p>
             
-        <p>Your participation in this research is voluntary. You may decline to answer any or all of the following questions. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal identifying inforrmation about you.</p>
-
-        <p>If you agree to participate in this study, please click the "I Agree" button below.</p>
-        
-        <!-- Agreement Button -->
-        <form action="{{ url_for('render_page', page_name='instructions') }}?{{ query_string }}">
-            <button type="submit" class="btn btn-primary">I Agree</button>
-        </form>
+            <p>Your participation in this research is voluntary. You may discontinue participation at any time during the research activity. You may print a copy of this consent form for your records.
+            </p>
+            
+            <form action="{{ url_for('render_page', page_name='instructions') }}?{{ query_string }}" style="text-align: center;">
+                <button type="submit" class="btn btn-primary" style="margin: 12px 0 0 0">I Agree</button>
+            </form>
+        </div>
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
