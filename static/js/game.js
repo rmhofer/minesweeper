@@ -1,31 +1,30 @@
-function reveal(x, y) {
+function reveal(x, y, time=null) {
     // reveal a square on left click
-    processUserInteraction(x, y, 0);
+    processUserInteraction(x, y, 0, time);
 }
 
-function toggleFlag(event, x, y) {
+function toggleFlag(event, x, y, time=null) {
     // place/toggle a flag on right click
     event.preventDefault(); // Prevent the default context menu
-    processUserInteraction(x, y, 1);
+    processUserInteraction(x, y, 1, time);
 }
 
-function toggleMarkSafe(x, y) {
+function toggleMarkSafe(x, y, time=null) {
     // place/toggle a safe mark on right click
-    processUserInteraction(x, y, 2);
+    processUserInteraction(x, y, 2, time);
 }
 
-function processUserInteraction(x, y, action) {
+function processUserInteraction(x, y, action, time) {
     // return if in experiment mode and if the trial is not active
     if (typeof isTrialActive !== 'undefined' && !isTrialActive) {
         // Return if isTrialActive is defined and false
         return;
     }
-
     $.ajax({
         url: '/move',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({x: x, y: y, action: action}),
+        data: JSON.stringify({x: x, y: y, action: action, time: time}),
         success: function(data) {
             if (data.result) {
                 // only update game state if the move is valid
@@ -48,9 +47,9 @@ function renderGameBoard(gameState, interactionMode) {
             // Add interaction attributes depending on interaction mode
             let interactionAttributes = '';
             if (interactionMode == 'standard') {
-                interactionAttributes = ` onclick="reveal(${row}, ${col})" oncontextmenu="toggleFlag(event, ${row}, ${col})"`;
+                interactionAttributes = ` onclick="reveal(${row}, ${col}, Date.now())" oncontextmenu="toggleFlag(event, ${row}, ${col}, Date.now())"`;
             } else if (interactionMode == 'exploratory') {
-                interactionAttributes = ` onclick="toggleMarkSafe(${row}, ${col})" oncontextmenu="toggleFlag(event, ${row}, ${col})"`;
+                interactionAttributes = ` onclick="toggleMarkSafe(${row}, ${col}, Date.now())" oncontextmenu="toggleFlag(event, ${row}, ${col}, Date.now())"`;
             } else {
                 // no user interaction possible
             }

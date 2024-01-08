@@ -5,7 +5,7 @@ function doTrial() {
 
     $.getJSON('/get_stimulus', function(data) {
         // Start the reaction time timer
-        const startTime = Date.now();
+        const startTrialTime = Date.now();
 
         let useTimeoutForAdvance = false; // Set to false to require space bar press
         let gameState = data.game_state;
@@ -53,7 +53,8 @@ function doTrial() {
                 let responseCorrect = minePresent === userResponse;
                 
                 // Calculate reaction time
-                const reactionTime = Date.now() - startTime;
+                const responseGivenTime = Date.now()
+                const reactionTime = responseGivenTime - startTrialTime;
 
                 // Record trial data
                 let trial_data = {
@@ -64,7 +65,9 @@ function doTrial() {
                     'mine_present': minePresent,
                     'user_response': userResponse,
                     'response_correct': responseCorrect,
-                    'total_reaction_time': reactionTime,
+                    'start_trial_time': startTrialTime,
+                    'response_given_time': responseGivenTime,
+                    'total_reaction_time': reactionTime
                 };
                 
                 // feedback: update game board representation
@@ -118,7 +121,6 @@ function doTrial() {
         }
 
         function advanceTrialOrEndExperiment() {
-            console.log(numStimuli, trialID);
             if (numStimuli - trialID === 1) {
                 // Experiment is complete, redirect to the experiment completion route
                 window.location.href = '/survey';
@@ -147,7 +149,5 @@ function doTrial() {
 let isTrialActive = true;
 
 $(document).ready(function() {
-    // automatically load the first stimulus when the page is loaded
-    // TODO: what if the page is refreshed after the last stimulus?
     doTrial();
 });

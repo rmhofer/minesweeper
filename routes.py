@@ -14,7 +14,6 @@ import random
 def inject_query_string():
     # make querystring universally available to all routes
     g.query_string = request.query_string.decode('utf-8')
-    print("Query String on switch:", g.query_string)
     return dict(query_string=g.query_string)
 
 
@@ -22,7 +21,6 @@ def inject_query_string():
 def index():
     session.clear()  # Clears all data from the session
     query_string = request.query_string.decode('utf-8')
-    print("Query String on Index:", query_string)
     # query_string needs to be attached here because of a redirect
     return redirect(url_for('render_page', page_name='consent') + '?' + query_string)
 
@@ -80,6 +78,7 @@ def experiment():
         
     # retrieve or initialize other experiment variables
     session['trial_id'] = session.get('trial_id', 0)
+    session['score'] = session.get('score', 0)
     
     # redirect to survey if experiment has already ended
     if (len(stimuli) == session['trial_id']): 
@@ -104,8 +103,8 @@ def get_stimulus():
         game = Game(game_board=game_board,
              game_states=[{"move":0, "game_state":game_state_unsolved}])
         probe_types = session.get('probe_types')
-        probe_type = probe_types[trial_id]
-        probe = stimuli[trial_id][probe_type]
+        session['probe_type'] = probe_types[trial_id]
+        probe = stimuli[trial_id][session['probe_type']]
     else:
         # randomly create a new stimulus
         game = Game(length=10, width=10, num_mines=12)
@@ -178,14 +177,14 @@ def move():
     game = Game.deserialize(serialized_game)
     
     # carry out move
-    x, y, action = data['x'], data['y'], data['action']
+    x, y, action, time = data['x'], data['y'], data['action'], data['time']
     result = game.move(x, y, action)
     new_game_state = game.current_game_state.tolist()
     
     # serialize and store information in session variables
     session['game'] = game.serialize()
     user_actions = session.get('user_actions')
-    user_actions.append((x, y, action))
+    user_actions.append((x, y, action, time))
     session['user_actions'] = user_actions
     return jsonify({'result': result, 'game_state': new_game_state})
 
@@ -199,8 +198,13 @@ def send_response():
     trial_data['trial_id'] = session.get('trial_id', 0)
     user_actions = session.get('user_actions')
     trial_data['user_actions'] = user_actions
+    trial_data['probe_type'] = session.get('probe_type', '0')
     
-    # update bonus
+    # keep track of correct trials, update bonus
+    score = session.get('score', 0)
+    score += trial_data['response_correct']
+    session['score'] = score
+    
     bonus = session.get('bonus', 0) # Default to 0 if 'bonus' is not in session
     bonus += round(trial_data['response_correct'] * BONUS_AMOUNT, 4)
     session['bonus'] = bonus
@@ -221,10 +225,13 @@ def send_response():
 @app.route('/submit_survey', methods=['POST'])
 def submit_survey():
     # Extract form data
-    form_data = request.form
+    survey_data = request.form
+    prolific_id = session.get('prolific_id', 'default_id')
+    score = session.get('score', 0)
+    bonus = session.get('bonus', 0)
 
     # Call function to save data to the database
-    save_exit_data(form_data)
+    save_exit_data(prolific_id, score, bonus, survey_data)
 
     # Clear the session
     session.clear()
