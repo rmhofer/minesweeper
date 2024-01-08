@@ -14,19 +14,15 @@ import random
 def inject_query_string():
     # make querystring universally available to all routes
     g.query_string = request.query_string.decode('utf-8')
+    print("Query String on switch:", g.query_string)
     return dict(query_string=g.query_string)
-
-
-@app.route('/clear_session')
-def clear_session():
-    session.clear()  # Clears all data from the session
-    return 'Session cleared!'
 
 
 @app.route('/')
 def index():
     session.clear()  # Clears all data from the session
     query_string = request.query_string.decode('utf-8')
+    print("Query String on Index:", query_string)
     # query_string needs to be attached here because of a redirect
     return redirect(url_for('render_page', page_name='consent') + '?' + query_string)
 
@@ -73,7 +69,7 @@ def experiment():
             stimuli = None
 
         # Store the loaded stimuli in the session
-        session['stimuli'] = stimuli[:6]  # Assuming you want to store only the first 5
+        session['stimuli'] = stimuli #[:6]  # Assuming you want to store only the first 6
         
         # initialize probe types and randomize
         probe_types = ["naive_easy_probe",

@@ -61,7 +61,7 @@
             <img src="{{ url_for('static', filename='img/example_revealed_explained.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
         </div>
 
-        <p> In the boards you see, however, you will not see where the mines are. Instead, it is your job to <b>deduce which squares have mines</b> from the available information. On each trial you will be shown a board and asked to figure out whether a particular square, marked with a "?", contains a mine. For instance, you might be shown the board below, which has a probe square marked with a "?":        </p>
+        <p>We will present you with boards where not all square have been revealed. The 6 mines will be hidden under some of the unrevealed squares. It is your job to <b>deduce which squares have mines</b> from the available information. On each trial you will be shown a board and asked to figure out whether a particular square, marked with a "?", contains a mine. For instance, you might be shown the board below, which has a probe square marked with a "?":        </p>
 
         <div class="img-container">
             <img src="{{ url_for('static', filename='img/example_start.png') }}" alt="Minesweeper Game Board" class="img-fluid" style="width: 200px;">
@@ -70,8 +70,8 @@
         <p>Unlike in the classical game of Minesweeper, <b>you will not be able to click on squares to reveal them</b>. But to assist you in your reasoning, you will be able to:</p> 
         
         <ul>
-            <li>Place flags on squares you suspect to be mines (right-click).</li>
-            <li>Mark squares as safe if you believe they're free of mines (left-click).</li>
+            <li>Place <b>flags</b> on squares you suspect to be mines (right-click).</li>
+            <li>Mark squares as <b>safe</b> if you believe they're free of mines (left-click).</li>
         </ul>
 
         <p> For instance, to assist in figuring out the solution to the board above, you might flag and mark squares as safe so that the board looks like this:
@@ -84,7 +84,6 @@
         <p>A performance bonus of ${{ "%.2f"|format(bonus_amount) }} will be awarded for each puzzle solved correctly.</p>
 
         <hr />
-
 
         <div class="container mt-4">
             <h3>Comprehension Quiz</h3>

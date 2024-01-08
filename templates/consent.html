@@ -30,15 +30,24 @@
             
             <p>Your participation in this research is voluntary. You may discontinue participation at any time during the research activity. You may print a copy of this consent form for your records.
             </p>
-            
-            <form action="{{ url_for('render_page', page_name='instructions') }}?{{ query_string }}" style="text-align: center;">
-                <button type="submit" class="btn btn-primary" style="margin: 12px 0 0 0">I Agree</button>
-            </form>
+
+            <div style="text-align: center;">
+                <button type="button" class="btn btn-primary mt-3" id="agreeButton" submit-url="{{ url_for('render_page', page_name='instructions') }}?{{ query_string }}">I Agree</button>
+            </div>
+
         </div>
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById('agreeButton').addEventListener('click', function() {
+            var targetUrl = this.getAttribute('submit-url');
+            window.location.href = targetUrl;
+        });
+    </script>
+    
 </body>
 </html>
