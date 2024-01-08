@@ -1,0 +1,3 @@
+Flask==2.2.5
+pysqlite
+numpy==1.15.4
