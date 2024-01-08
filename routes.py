@@ -20,6 +20,13 @@ def inject_query_string():
 @app.route('/')
 def index():
     session.clear()  # Clears all data from the session
+    
+    # get study parameters from url
+    params = request.args
+    session['prolific_id'] = params.get('PROLIFIC_PID', 'prolific_id')
+    session['study_id'] = params.get('STUDY_ID', 'study_id')
+    session['session_id'] = params.get('SESSION_ID', 'session_id')
+    
     query_string = request.query_string.decode('utf-8')
     # query_string needs to be attached here because of a redirect
     return redirect(url_for('render_page', page_name='consent') + '?' + query_string)
@@ -48,12 +55,6 @@ def render_page(page_name):
 
 @app.route('/experiment')
 def experiment():
-    # Parse information passed as part of the URL
-    params = request.args
-    session['prolific_id'] = params.get('PID', 'default_id')
-    debug_mode_arg_value = params.get('debug', 'false')
-    session['debug'] = debug_mode_arg_value.lower() in ['true', '1', 'yes']
-
     # set up stimuli - retrieve or initialize
     if 'stimuli' in session:
         stimuli = session['stimuli']
@@ -191,7 +192,7 @@ def move():
 
 @app.route('/send_response', methods=['POST'])
 def send_response():
-    prolific_id = session.get('prolific_id', 'default_id')
+    prolific_id = session.get('PROLIFIC_PID', 'default_id')
     
     # retrieve trial-related data
     trial_data = request.json
@@ -226,7 +227,7 @@ def send_response():
 def submit_survey():
     # Extract form data
     survey_data = request.form
-    prolific_id = session.get('prolific_id', 'default_id')
+    prolific_id = session.get('PROLIFIC_PID', 'default_id')
     score = session.get('score', 0)
     bonus = session.get('bonus', 0)
 
