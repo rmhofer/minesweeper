@@ -1,0 +1,10 @@
+{
+    "DEBUG": false,
+    "BONUS_AMOUNT": 0.05,
+    "SECRET_KEY": "secret_key",
+    "SQLALCHEMY_DATABASE_URI": "database_uri",
+    "PROLIFIC_COMPLETION_URL": "prolific_completion_url",
+    "DATABASE_NAME": "data.db",
+    "TRIALS_TABLE_NAME": "trials",
+    "SUBJECTS_TABLE_NAME": "subjects"
+}
